@@ -54,6 +54,9 @@ compose.desktop {
         mainClass = "com.sekaiforlyok.MainKt"
         nativeDistributions {
             targetFormats(TargetFormat.Msi)
+            // Módulos de Java que el empaquetado no detecta solo. Sin jdk.accessibility la app
+            // no arranca en Windows con la accesibilidad de Java activada ("Failed to launch JVM").
+            modules("jdk.accessibility", "jdk.unsupported")
             packageName = "SekaiForlyok"
             packageVersion = "1.0.0"
             description = "Creador de personajes y mundos al estilo manhwa"
