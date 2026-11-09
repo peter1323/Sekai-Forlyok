@@ -31,6 +31,9 @@ private fun reinoDeAethel() = Mundo(
         Lugar("seul", "Seúl Nueva", TipoLugar.CIUDAD, "Capital del reino, construida sobre las ruinas de la antigua ciudad.", padreId = "aethel", x = 0.45f, y = 0.55f),
         Lugar("musgo", "Villa Musgo", TipoLugar.PUEBLO, "Pueblo tranquilo junto al bosque.", padreId = "aethel", x = 0.22f, y = 0.40f),
         Lugar("puerta", "Puerta Roja", TipoLugar.MAZMORRA, "Mazmorra de rango B que nunca se cierra.", padreId = "seul", x = 0.40f, y = 0.30f),
+        // Niveles 4 y 5 del árbol: lugares dentro de la Puerta Roja
+        Lugar("cripta", "Cripta Olvidada", TipoLugar.MAZMORRA, "Primer piso de la Puerta Roja, lleno de no muertos.", padreId = "puerta"),
+        Lugar("sala", "Sala del Rey Esqueleto", TipoLugar.OTRO, "Donde espera el jefe final de la mazmorra.", padreId = "cripta"),
         Lugar("valtor", "Reino de Valtor", TipoLugar.REINO, "Reino de herreros en las montañas del este.", padreId = "eastaria", x = 0.80f, y = 0.45f),
         Lugar("ceniza", "Fortaleza Ceniza", TipoLugar.CIUDAD, "Ciudad amurallada que vigila la frontera.", padreId = "valtor", x = 0.82f, y = 0.62f),
         Lugar("abismo", "Torre del Abismo", TipoLugar.MAZMORRA, "Nadie ha llegado a su último piso.", padreId = "valtor", x = 0.75f, y = 0.30f),

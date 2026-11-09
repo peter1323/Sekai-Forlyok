@@ -99,6 +99,11 @@ class ReglasMundoTest {
     }
 
     @Test
+    fun elEjemploDeAethelLlegaAlNivel5() {
+        assertEquals(5, mundosDePrueba()[0].arbolLugares().maxOf { it.second })
+    }
+
+    @Test
     fun elTerrenoTieneMarYTierra() {
         // Con cualquier semilla debe haber agua (bordes) y tierra (centro)
         repeat(5) { semilla ->
