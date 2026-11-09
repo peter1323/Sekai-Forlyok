@@ -22,6 +22,11 @@ class MundosViewModel(private val repo: Repositorio) : ViewModel() {
         repo.guardar(nuevos)
     }
 
+    /** Añade los mundos de ejemplo (ver DatosDePrueba.kt) sin tocar los que ya existen. */
+    fun cargarDatosDePrueba() {
+        repo.guardar(repo.mundos.value + mundosDePrueba())
+    }
+
     /** Borra un mundo con todo su contenido, incluida la imagen de su mapa. */
     fun borrarMundo(id: String) {
         repo.mundos.value.find { it.id == id }?.rutaMapa?.let { repo.borrarImagen(it) }

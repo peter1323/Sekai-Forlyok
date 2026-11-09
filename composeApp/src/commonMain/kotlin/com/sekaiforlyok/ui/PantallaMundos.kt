@@ -19,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -44,13 +45,21 @@ fun PantallaMundos(vm: MundosViewModel, alAbrirMundo: (String) -> Unit) {
     var borrando by remember { mutableStateOf<Mundo?>(null) }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Sekai Forlyok") }) },
+        topBar = {
+            TopAppBar(
+                title = { Text("Sekai Forlyok") },
+                // Crea mundos de ejemplo para probar la app rápidamente
+                actions = { TextButton(onClick = vm::cargarDatosDePrueba) { Text("Datos de prueba") } },
+            )
+        },
         floatingActionButton = {
             FloatingActionButton(onClick = { creando = true }) { Icon(Icons.Default.Add, "Crear mundo") }
         },
     ) { margen ->
         if (mundos.isEmpty()) {
-            Column(Modifier.padding(margen)) { ListaVacia("Aún no tienes mundos. Pulsa + para crear el primero.") }
+            Column(Modifier.padding(margen)) {
+                ListaVacia("Aún no tienes mundos. Pulsa + para crear el primero, o \"Datos de prueba\" arriba para ver ejemplos.")
+            }
         }
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(margen),

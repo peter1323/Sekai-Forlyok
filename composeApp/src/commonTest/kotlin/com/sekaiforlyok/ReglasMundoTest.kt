@@ -11,6 +11,7 @@ import com.sekaiforlyok.viewmodel.arbolLugares
 import com.sekaiforlyok.viewmodel.borrarFaccion
 import com.sekaiforlyok.viewmodel.borrarLugar
 import com.sekaiforlyok.viewmodel.borrarPersonaje
+import com.sekaiforlyok.viewmodel.mundosDePrueba
 import com.sekaiforlyok.viewmodel.padresPosibles
 import com.sekaiforlyok.viewmodel.personajesOrdenados
 import kotlin.test.Test
@@ -77,6 +78,24 @@ class ReglasMundoTest {
     @Test
     fun elArbolMuestraCadaLugarConSuNivel() {
         assertEquals(listOf("Eastaria" to 0, "Aethel" to 1, "Seúl Nueva" to 2), mundo.arbolLugares().map { it.first.nombre to it.second })
+    }
+
+    @Test
+    fun losDatosDePruebaSonCoherentes() {
+        // Todo lo que se referencia (facción, lugar, padre, personajes de una relación) debe existir
+        mundosDePrueba().forEach { m ->
+            val personajes = m.personajes.map { it.id }.toSet()
+            val lugares = m.lugares.map { it.id }.toSet()
+            val facciones = m.facciones.map { it.id }.toSet()
+            m.personajes.forEach { p ->
+                assert(p.faccionId == null || p.faccionId in facciones) { "${p.nombre}: facción" }
+                assert(p.lugarId == null || p.lugarId in lugares) { "${p.nombre}: lugar" }
+            }
+            m.lugares.forEach { l -> assert(l.padreId == null || l.padreId in lugares) { "${l.nombre}: padre" } }
+            m.relaciones.forEach { r ->
+                assert(r.personaje1Id in personajes && r.personaje2Id in personajes && r.personaje1Id != r.personaje2Id) { r.id }
+            }
+        }
     }
 
     @Test
