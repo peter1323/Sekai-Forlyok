@@ -1,7 +1,32 @@
-# Sekai Forlyok
+<p align="center">
+  <img src="composeApp/src/desktopMain/resources/icono.png" alt="Icono de Sekai Forlyok" width="140">
+</p>
+
+<h1 align="center">Sekai Forlyok</h1>
+
+<p align="center">
+  Creador de personajes y mundos al estilo manhwa<br>
+  Creado por <a href="https://github.com/peter1323">peter1323</a>
+</p>
 
 Creador de personajes y mundos al estilo manhwa para **Android** y **Windows**.
 Está hecho con Kotlin Multiplatform y Compose Multiplatform, y funciona sin internet.
+
+<p align="center">
+  <img src="capturas/personajes.png" alt="Personajes" width="400">
+  <img src="capturas/mapa.png" alt="Mapa" width="400">
+</p>
+<p align="center"><i>Personajes · Mapa</i></p>
+<p align="center">
+  <img src="capturas/lugares.png" alt="Lugares" width="400">
+  <img src="capturas/relaciones.png" alt="Relaciones" width="400">
+</p>
+<p align="center"><i>Lugares · Relaciones</i></p>
+<p align="center">
+  <img src="capturas/mundos.png" alt="Mundos" width="400">
+  <img src="capturas/ajustes.png" alt="Ajustes" width="400">
+</p>
+<p align="center"><i>Mundos · Ajustes</i></p>
 
 ## Qué hace la app
 
@@ -16,7 +41,7 @@ Está hecho con Kotlin Multiplatform y Compose Multiplatform, y funciona sin int
   Tiene zoom y desplazamiento, y puedes colocar tus lugares con pines rojos.
 - **Relaciones:** amigos, rivales, enemigos, pareja, familia, maestro y alumno, aliados u otro, con una nota opcional.
 
-Tema Material 3 con modo oscuro (sigue el modo del sistema).
+- **Ajustes:** tema claro, oscuro o el del sistema; idioma español o inglés; autor y enlace a las descargas.
 
 ### ¿Cómo consigo un mapa bonito?
 
@@ -112,3 +137,9 @@ Para publicarlo en Google Play hay que crear una clave propia
 
 El instalador queda en `composeApp/build/compose/binaries/main/msi/`.
 Hay que generarlo desde Windows. La primera vez Gradle descarga WiX (la herramienta que crea el .msi).
+
+## Licencia
+
+© 2026 [peter1323](https://github.com/peter1323). Todos los derechos reservados.
+Puedes ver el código y usar la app para uso personal; para modificarla, redistribuirla o
+publicarla necesitas permiso del autor. Consulta el archivo [LICENSE](LICENSE).
