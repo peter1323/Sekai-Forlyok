@@ -29,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.sekaiforlyok.model.Lugar
@@ -49,6 +50,11 @@ fun iconoLugar(tipo: TipoLugar): ImageVector = when (tipo) {
     TipoLugar.OTRO -> Icons.Default.Place
 }
 
+/** Colores por nivel del árbol: dorado, morado, azul, verde… y vuelta a empezar. */
+private val COLORES_NIVEL = listOf(Color(0xFFD4A017), Color(0xFFAB47BC), Color(0xFF42A5F5), Color(0xFF4CAF50))
+
+fun colorNivel(nivel: Int): Color = COLORES_NIVEL[nivel % COLORES_NIVEL.size]
+
 /** Pestaña de lugares: árbol con sangría (continente > reino > ciudad…). */
 @Composable
 fun PestanaLugares(mundo: Mundo, vm: MundoViewModel) {
@@ -65,10 +71,10 @@ fun PestanaLugares(mundo: Mundo, vm: MundoViewModel) {
                         .padding(start = 16.dp + 24.dp * nivel, top = 6.dp, bottom = 6.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Icon(iconoLugar(lugar.tipo), contentDescription = lugar.tipo.texto)
+                    Icon(iconoLugar(lugar.tipo), contentDescription = lugar.tipo.texto, tint = colorNivel(nivel))
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
-                        Text(lugar.nombre, style = MaterialTheme.typography.titleMedium)
+                        Text(lugar.nombre, style = MaterialTheme.typography.titleMedium, color = colorNivel(nivel))
                         Text(lugar.tipo.texto, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     BotonesEditarBorrar(alEditar = { editando = lugar }, alBorrar = { borrando = lugar })
