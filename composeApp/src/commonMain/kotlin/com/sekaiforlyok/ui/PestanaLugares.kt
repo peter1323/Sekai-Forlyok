@@ -50,10 +50,12 @@ fun iconoLugar(tipo: TipoLugar): ImageVector = when (tipo) {
     TipoLugar.OTRO -> Icons.Default.Place
 }
 
-/** Colores por nivel del árbol: dorado, morado, azul, verde… y vuelta a empezar. */
-private val COLORES_NIVEL = listOf(Color(0xFFD4A017), Color(0xFFAB47BC), Color(0xFF42A5F5), Color(0xFF4CAF50))
+/** Colores por nivel del árbol: dorado, morado, azul, verde y, del nivel 4 en adelante, turquesa. */
+private val COLORES_NIVEL = listOf(
+    Color(0xFFD4A017), Color(0xFFAB47BC), Color(0xFF42A5F5), Color(0xFF4CAF50), Color(0xFF26A69A),
+)
 
-fun colorNivel(nivel: Int): Color = COLORES_NIVEL[nivel % COLORES_NIVEL.size]
+fun colorNivel(nivel: Int): Color = COLORES_NIVEL[nivel.coerceAtMost(COLORES_NIVEL.lastIndex)]
 
 /** Pestaña de lugares: árbol con sangría (continente > reino > ciudad…). */
 @Composable
