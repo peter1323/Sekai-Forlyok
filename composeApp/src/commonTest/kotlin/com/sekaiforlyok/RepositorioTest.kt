@@ -1,7 +1,10 @@
 package com.sekaiforlyok
 
 import com.sekaiforlyok.data.Repositorio
+import com.sekaiforlyok.model.Ajustes
+import com.sekaiforlyok.model.Idioma
 import com.sekaiforlyok.model.Lugar
+import com.sekaiforlyok.model.Tema
 import com.sekaiforlyok.model.Mundo
 import com.sekaiforlyok.model.Personaje
 import com.sekaiforlyok.model.Rango
@@ -25,9 +28,12 @@ class RepositorioTest {
                 lugares = listOf(Lugar("l1", "Seúl Nueva", x = 0.3f, y = 0.6f)),
             ),
         )
-        Repositorio(carpeta).guardar(mundos)
+        val ajustes = Ajustes(tema = Tema.OSCURO, idioma = Idioma.EN)
+        Repositorio(carpeta).apply { guardar(mundos); guardarAjustes(ajustes) }
 
-        // Un repositorio nuevo lee el archivo desde el disco
-        assertEquals(mundos, Repositorio(carpeta).mundos.value)
+        // Un repositorio nuevo lee los archivos desde el disco
+        val leido = Repositorio(carpeta)
+        assertEquals(mundos, leido.mundos.value)
+        assertEquals(ajustes, leido.ajustes.value)
     }
 }

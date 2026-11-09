@@ -71,6 +71,7 @@ private const val ZOOM_MAXIMO = 6f
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PestanaMapa(mundo: Mundo, vm: MundoViewModel) {
+    val t = LocalTextos.current
     // La imagen solo se vuelve a cargar cuando cambia el mapa
     val imagen = remember(mundo.rutaMapa, mundo.semillaMapa) { vm.imagenMapa(mundo) }
 
@@ -93,8 +94,8 @@ fun PestanaMapa(mundo: Mundo, vm: MundoViewModel) {
                 Card { Column(Modifier.padding(16.dp)) { TextoRecomendaciones() } }
                 Spacer(Modifier.height(16.dp))
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(onClick = { selector.launch() }) { Text("Cargar imagen (JPG o PNG)") }
-                    OutlinedButton(onClick = generar) { Text("Generar terreno en la app") }
+                    Button(onClick = { selector.launch() }) { Text(t.cargarImagen) }
+                    OutlinedButton(onClick = generar) { Text(t.generarTerrenoEnApp) }
                 }
             }
         } else {
@@ -102,15 +103,15 @@ fun PestanaMapa(mundo: Mundo, vm: MundoViewModel) {
             var escala by remember { mutableFloatStateOf(1f) }
             var desplazamiento by remember { mutableStateOf(Offset.Zero) }
             FlowRow(Modifier.padding(horizontal = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = { selector.launch() }) { Text("Cambiar imagen") }
-                OutlinedButton(onClick = generar) { Text("Generar terreno") }
+                OutlinedButton(onClick = { selector.launch() }) { Text(t.cambiarImagen) }
+                OutlinedButton(onClick = generar) { Text(t.generarTerreno) }
                 IconButton(onClick = { escala = 1f; desplazamiento = Offset.Zero }) {
-                    Icon(Icons.Default.CenterFocusStrong, "Centrar mapa")
+                    Icon(Icons.Default.CenterFocusStrong, t.centrarMapa)
                 }
-                IconButton(onClick = { verAyuda = true }) { Icon(Icons.Default.Info, "Ayuda") }
+                IconButton(onClick = { verAyuda = true }) { Icon(Icons.Default.Info, t.ayuda) }
             }
             Text(
-                "Toca el mapa para colocar un lugar. Pellizca o usa la rueda del ratón para hacer zoom.",
+                t.ayudaMapa,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(horizontal = 12.dp),
             )
@@ -130,13 +131,13 @@ fun PestanaMapa(mundo: Mundo, vm: MundoViewModel) {
     puntoElegido?.let { punto ->
         AlertDialog(
             onDismissRequest = { puntoElegido = null },
-            title = { Text("¿Qué lugar va aquí?") },
+            title = { Text(t.queLugarVaAqui) },
             text = {
                 Column(Modifier.verticalScroll(rememberScrollState())) {
-                    if (mundo.lugares.isEmpty()) Text("Primero crea lugares en la pestaña Lugares.")
+                    if (mundo.lugares.isEmpty()) Text(t.primeroCreaLugares)
                     mundo.lugares.sortedBy { it.nombre.lowercase() }.forEach { lugar ->
                         Text(
-                            lugar.nombre + " (" + lugar.tipo.texto + ")" + if (lugar.x != null) " · ya está en el mapa" else "",
+                            lugar.nombre + " (" + t.tiposLugar.getValue(lugar.tipo) + ")" + if (lugar.x != null) t.yaEnMapa else "",
                             modifier = Modifier.fillMaxWidth()
                                 .clickable { vm.colocarEnMapa(lugar.id, punto.x, punto.y); puntoElegido = null }
                                 .padding(vertical = 10.dp),
@@ -144,7 +145,7 @@ fun PestanaMapa(mundo: Mundo, vm: MundoViewModel) {
                     }
                 }
             },
-            confirmButton = { TextButton(onClick = { puntoElegido = null }) { Text("Cancelar") } },
+            confirmButton = { TextButton(onClick = { puntoElegido = null }) { Text(t.cancelar) } },
         )
     }
 
@@ -156,15 +157,15 @@ fun PestanaMapa(mundo: Mundo, vm: MundoViewModel) {
             title = { Text(lugar.nombre) },
             text = {
                 Column {
-                    Text(lugar.tipo.texto, color = MaterialTheme.colorScheme.primary)
-                    if (padre != null) Text("Dentro de: ${padre.nombre}")
+                    Text(t.tiposLugar.getValue(lugar.tipo), color = MaterialTheme.colorScheme.primary)
+                    if (padre != null) Text(t.dentroDe(padre.nombre))
                     if (lugar.descripcion.isNotBlank()) Text(lugar.descripcion, Modifier.padding(top = 8.dp))
                 }
             },
-            confirmButton = { TextButton(onClick = { lugarVisto = null }) { Text("Cerrar") } },
+            confirmButton = { TextButton(onClick = { lugarVisto = null }) { Text(t.cerrar) } },
             dismissButton = {
                 TextButton(onClick = { vm.quitarDelMapa(lugar.id); lugarVisto = null }) {
-                    Text("Quitar del mapa", color = MaterialTheme.colorScheme.error)
+                    Text(t.quitarDelMapa, color = MaterialTheme.colorScheme.error)
                 }
             },
         )
@@ -173,17 +174,17 @@ fun PestanaMapa(mundo: Mundo, vm: MundoViewModel) {
     if (confirmarGenerar) {
         AlertDialog(
             onDismissRequest = { confirmarGenerar = false },
-            title = { Text("¿Generar un terreno nuevo?") },
-            text = { Text("El mapa actual se borrará. Los lugares colocados se quedarán en la misma posición.") },
-            confirmButton = { TextButton(onClick = { vm.generarMapa(); confirmarGenerar = false }) { Text("Generar") } },
-            dismissButton = { TextButton(onClick = { confirmarGenerar = false }) { Text("Cancelar") } },
+            title = { Text(t.generarNuevoTitulo) },
+            text = { Text(t.generarNuevoAviso) },
+            confirmButton = { TextButton(onClick = { vm.generarMapa(); confirmarGenerar = false }) { Text(t.generar) } },
+            dismissButton = { TextButton(onClick = { confirmarGenerar = false }) { Text(t.cancelar) } },
         )
     }
     if (verAyuda) {
         AlertDialog(
             onDismissRequest = { verAyuda = false },
             text = { Column(Modifier.verticalScroll(rememberScrollState())) { TextoRecomendaciones() } },
-            confirmButton = { TextButton(onClick = { verAyuda = false }) { Text("Entendido") } },
+            confirmButton = { TextButton(onClick = { verAyuda = false }) { Text(t.entendido) } },
         )
     }
 }
@@ -191,14 +192,15 @@ fun PestanaMapa(mundo: Mundo, vm: MundoViewModel) {
 /** Texto de ayuda con las formas recomendadas de crear un mapa. */
 @Composable
 private fun TextoRecomendaciones() {
-    Text("Crea tu mapa fuera de la app y tráelo en JPG o PNG (recomendado)", style = MaterialTheme.typography.titleMedium)
+    val t = LocalTextos.current
+    Text(t.recomendacionTitulo, style = MaterialTheme.typography.titleMedium)
     Spacer(Modifier.height(8.dp))
-    Text("• Azgaar's Fantasy Map Generator: gratis y sin límites.")
-    Text("• Inkarnate (plan gratis): estilo dibujado a mano; máximo 3 mapas, 2K y solo uso personal.")
-    Text("• Pídeselo a una IA: describe el terreno que quieres (continentes, montañas, ríos, estilo manhwa…), genera la imagen y cárgala aquí.")
+    Text(t.recomendacionAzgaar)
+    Text(t.recomendacionInkarnate)
+    Text(t.recomendacionIa)
     Spacer(Modifier.height(8.dp))
     Text(
-        "También puedes generar un terreno sencillo dentro de la app (sin internet).",
+        t.recomendacionGenerar,
         style = MaterialTheme.typography.bodySmall,
     )
 }
@@ -256,7 +258,7 @@ private fun VisorMapa(
                     detectTapGestures { pos -> alTocarMapa(Offset(pos.x / size.width, pos.y / size.height)) }
                 },
         ) {
-            Image(imagen, contentDescription = "Mapa", modifier = Modifier.fillMaxSize(), contentScale = ContentScale.FillBounds)
+            Image(imagen, contentDescription = LocalTextos.current.mapa, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.FillBounds)
             val anchoPx = constraints.maxWidth
             val altoPx = constraints.maxHeight
             lugares.forEach { lugar -> Pin(lugar, lugar.x!! * anchoPx, lugar.y!! * altoPx, escala) { alTocarPin(lugar) } }

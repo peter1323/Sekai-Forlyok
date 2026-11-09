@@ -42,15 +42,8 @@ data class Faccion(
     val descripcion: String = "",
 )
 
-/** Tipos de lugar, cada uno con el texto que se ve en pantalla. */
-enum class TipoLugar(val texto: String) {
-    CONTINENTE("Continente"),
-    REINO("Reino"),
-    CIUDAD("Ciudad"),
-    PUEBLO("Pueblo"),
-    MAZMORRA("Mazmorra"),
-    OTRO("Otro"),
-}
+/** Tipos de lugar. El texto que se ve en pantalla está en ui/Textos.kt (según el idioma). */
+enum class TipoLugar { CONTINENTE, REINO, CIUDAD, PUEBLO, MAZMORRA, OTRO }
 
 @Serializable
 data class Lugar(
@@ -63,16 +56,18 @@ data class Lugar(
     val y: Float? = null,             // Posición en el mapa, de 0 (arriba) a 1 (abajo)
 )
 
-enum class TipoRelacion(val texto: String) {
-    AMIGOS("Amigos"),
-    RIVALES("Rivales"),
-    ENEMIGOS("Enemigos"),
-    PAREJA("Pareja"),
-    FAMILIA("Familia"),
-    MAESTRO_ALUMNO("Maestro y alumno"),
-    ALIADOS("Aliados"),
-    OTRO("Otro"),
-}
+/** Tipos de relación. El texto que se ve en pantalla está en ui/Textos.kt (según el idioma). */
+enum class TipoRelacion { AMIGOS, RIVALES, ENEMIGOS, PAREJA, FAMILIA, MAESTRO_ALUMNO, ALIADOS, OTRO }
+
+/** Ajustes de la app. Se guardan aparte, en ajustes.json. */
+@Serializable
+data class Ajustes(
+    val tema: Tema = Tema.SISTEMA,
+    val idioma: Idioma = Idioma.ES,
+)
+
+enum class Tema { SISTEMA, CLARO, OSCURO }   // SISTEMA = el mismo modo que Windows/Android
+enum class Idioma { ES, EN }
 
 @Serializable
 data class Relacion(

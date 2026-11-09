@@ -29,11 +29,12 @@ import com.sekaiforlyok.viewmodel.nuevoId
 /** Pestaña de facciones: lista con número de miembros, crear, editar y borrar. */
 @Composable
 fun PestanaFacciones(mundo: Mundo, vm: MundoViewModel) {
+    val t = LocalTextos.current
     var editando by remember { mutableStateOf<Faccion?>(null) }
     var borrando by remember { mutableStateOf<Faccion?>(null) }
 
-    ConBotonAnadir("Añadir facción", alPulsar = { editando = Faccion(id = nuevoId(), nombre = "") }) {
-        if (mundo.facciones.isEmpty()) ListaVacia("Todavía no hay facciones.")
+    ConBotonAnadir(t.anadirFaccion, alPulsar = { editando = Faccion(id = nuevoId(), nombre = "") }) {
+        if (mundo.facciones.isEmpty()) ListaVacia(t.sinFacciones)
         LazyColumn(contentPadding = PaddingValues(bottom = 88.dp)) {
             items(mundo.facciones.sortedBy { it.nombre.lowercase() }, key = { it.id }) { f ->
                 Row(
@@ -43,9 +44,8 @@ fun PestanaFacciones(mundo: Mundo, vm: MundoViewModel) {
                     Column(Modifier.weight(1f)) {
                         Text(f.nombre, style = MaterialTheme.typography.titleMedium)
                         if (f.descripcion.isNotBlank()) Text(f.descripcion, style = MaterialTheme.typography.bodyMedium, maxLines = 2)
-                        val n = mundo.miembros(f.id)
                         Text(
-                            if (n == 1) "1 miembro" else "$n miembros",
+                            t.miembros(mundo.miembros(f.id)),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -60,19 +60,19 @@ fun PestanaFacciones(mundo: Mundo, vm: MundoViewModel) {
     editando?.let { original ->
         var f by remember(original.id) { mutableStateOf(original) }
         DialogoFormulario(
-            titulo = if (mundo.facciones.none { it.id == original.id }) "Nueva facción" else "Editar facción",
+            titulo = if (mundo.facciones.none { it.id == original.id }) t.nuevaFaccion else t.editarFaccion,
             puedeGuardar = f.nombre.isNotBlank(),
             alGuardar = { vm.guardarFaccion(f); editando = null },
             alCancelar = { editando = null },
         ) {
-            OutlinedTextField(f.nombre, { f = f.copy(nombre = it) }, label = { Text("Nombre") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-            OutlinedTextField(f.descripcion, { f = f.copy(descripcion = it) }, label = { Text("Descripción") }, minLines = 3, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(f.nombre, { f = f.copy(nombre = it) }, label = { Text(t.nombre) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(f.descripcion, { f = f.copy(descripcion = it) }, label = { Text(t.descripcion) }, minLines = 3, modifier = Modifier.fillMaxWidth())
         }
     }
     borrando?.let { f ->
         ConfirmarBorrado(
             nombre = f.nombre,
-            aviso = "Sus miembros se quedarán sin facción.",
+            aviso = t.avisoBorrarFaccion,
             alConfirmar = { vm.borrarFaccion(f.id); borrando = null },
             alCancelar = { borrando = null },
         )

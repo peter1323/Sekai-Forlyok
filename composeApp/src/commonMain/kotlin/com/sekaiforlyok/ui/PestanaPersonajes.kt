@@ -69,11 +69,12 @@ fun CirculoRango(rango: Rango) {
 /** Pestaña de personajes: lista ordenada de S a E y formulario para crear/editar. */
 @Composable
 fun PestanaPersonajes(mundo: Mundo, vm: MundoViewModel) {
+    val t = LocalTextos.current
     var editando by remember { mutableStateOf<Personaje?>(null) }  // Personaje abierto en el formulario
     var borrando by remember { mutableStateOf<Personaje?>(null) }
 
-    ConBotonAnadir("Añadir personaje", alPulsar = { editando = Personaje(id = nuevoId(), nombre = "") }) {
-        if (mundo.personajes.isEmpty()) ListaVacia("Todavía no hay personajes.")
+    ConBotonAnadir(t.anadirPersonaje, alPulsar = { editando = Personaje(id = nuevoId(), nombre = "") }) {
+        if (mundo.personajes.isEmpty()) ListaVacia(t.sinPersonajes)
         LazyColumn(contentPadding = PaddingValues(bottom = 88.dp)) {
             items(mundo.personajesOrdenados(), key = { it.id }) { p ->
                 FilaPersonaje(
@@ -98,7 +99,7 @@ fun PestanaPersonajes(mundo: Mundo, vm: MundoViewModel) {
     borrando?.let { p ->
         ConfirmarBorrado(
             nombre = p.nombre,
-            aviso = "También se borrarán sus relaciones.",
+            aviso = t.avisoBorrarPersonaje,
             alConfirmar = { vm.borrarPersonaje(p.id); borrando = null },
             alCancelar = { borrando = null },
         )
@@ -108,6 +109,7 @@ fun PestanaPersonajes(mundo: Mundo, vm: MundoViewModel) {
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun FilaPersonaje(p: Personaje, faccion: Faccion?, alEditar: () -> Unit, alBorrar: () -> Unit) {
+    val t = LocalTextos.current
     Row(
         Modifier.fillMaxWidth().clickable(onClick = alEditar).padding(start = 16.dp, top = 8.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -115,10 +117,10 @@ private fun FilaPersonaje(p: Personaje, faccion: Faccion?, alEditar: () -> Unit,
         CirculoRango(p.rango)
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
-            val edad = p.edad?.let { ", $it años" } ?: ""
+            val edad = p.edad?.let { t.edadAnos(it) } ?: ""
             Text(p.nombre + edad, style = MaterialTheme.typography.titleMedium)
             Text(
-                faccion?.nombre ?: "Sin facción",
+                faccion?.nombre ?: t.sinFaccion,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -137,6 +139,7 @@ private fun FilaPersonaje(p: Personaje, faccion: Faccion?, alEditar: () -> Unit,
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun DialogoPersonaje(original: Personaje, mundo: Mundo, alGuardar: (Personaje) -> Unit, alCancelar: () -> Unit) {
+    val t = LocalTextos.current
     // Copia de trabajo: se va cambiando con el formulario y solo se guarda al pulsar "Guardar"
     var p by remember { mutableStateOf(original) }
     var edadTexto by remember { mutableStateOf(original.edad?.toString() ?: "") }
@@ -150,59 +153,59 @@ private fun DialogoPersonaje(original: Personaje, mundo: Mundo, alGuardar: (Pers
     }
 
     DialogoFormulario(
-        titulo = if (esNuevo) "Nuevo personaje" else "Editar personaje",
+        titulo = if (esNuevo) t.nuevoPersonaje else t.editarPersonaje,
         puedeGuardar = p.nombre.isNotBlank(),
         alGuardar = { alGuardar(p.copy(edad = edadTexto.toIntOrNull())) },
         alCancelar = alCancelar,
     ) {
-        OutlinedTextField(p.nombre, { p = p.copy(nombre = it) }, label = { Text("Nombre") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(p.nombre, { p = p.copy(nombre = it) }, label = { Text(t.nombre) }, singleLine = true, modifier = Modifier.fillMaxWidth())
         OutlinedTextField(
             edadTexto,
             { texto -> edadTexto = texto.filter { it.isDigit() }.take(6) }, // Solo números
-            label = { Text("Edad") }, singleLine = true, modifier = Modifier.fillMaxWidth(),
+            label = { Text(t.edad) }, singleLine = true, modifier = Modifier.fillMaxWidth(),
         )
         // Rangos de S a E en el desplegable
-        Desplegable("Rango", Rango.entries.reversed(), p.rango, { it.name }) { p = p.copy(rango = it) }
+        Desplegable(t.rango, Rango.entries.reversed(), p.rango, { it.name }) { p = p.copy(rango = it) }
 
         // Poderes: se escriben y se añaden como chips; la X los quita
-        Text("Poderes", style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(top = 8.dp))
+        Text(t.poderes, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(top = 8.dp))
         FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             p.poderes.forEach { poder ->
                 InputChip(
                     selected = false,
                     onClick = { p = p.copy(poderes = p.poderes - poder) },
                     label = { Text(poder) },
-                    trailingIcon = { Icon(Icons.Default.Close, "Quitar poder", Modifier.size(16.dp)) },
+                    trailingIcon = { Icon(Icons.Default.Close, t.quitarPoder, Modifier.size(16.dp)) },
                 )
             }
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            OutlinedTextField(nuevoPoder, { nuevoPoder = it }, label = { Text("Nuevo poder") }, singleLine = true, modifier = Modifier.weight(1f))
-            TextButton(onClick = ::anadirPoder) { Text("Añadir") }
+            OutlinedTextField(nuevoPoder, { nuevoPoder = it }, label = { Text(t.nuevoPoder) }, singleLine = true, modifier = Modifier.weight(1f))
+            TextButton(onClick = ::anadirPoder) { Text(t.anadir) }
         }
 
         // Desplegables de facción y lugar. "null" es la opción "Sin …"
         Desplegable(
-            "Facción", listOf<Faccion?>(null) + mundo.facciones, mundo.facciones.find { it.id == p.faccionId },
-            { it?.nombre ?: "Sin facción" },
+            t.faccion, listOf<Faccion?>(null) + mundo.facciones, mundo.facciones.find { it.id == p.faccionId },
+            { it?.nombre ?: t.sinFaccion },
         ) { p = p.copy(faccionId = it?.id) }
         Desplegable(
-            "Lugar de origen", listOf<Lugar?>(null) + mundo.lugares, mundo.lugares.find { it.id == p.lugarId },
-            { it?.nombre ?: "Sin lugar" },
+            t.lugarOrigen, listOf<Lugar?>(null) + mundo.lugares, mundo.lugares.find { it.id == p.lugarId },
+            { it?.nombre ?: t.sinLugar },
         ) { p = p.copy(lugarId = it?.id) }
 
-        OutlinedTextField(p.descripcion, { p = p.copy(descripcion = it) }, label = { Text("Descripción e historia") }, minLines = 4, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(p.descripcion, { p = p.copy(descripcion = it) }, label = { Text(t.historia) }, minLines = 4, modifier = Modifier.fillMaxWidth())
 
         // Relaciones de este personaje (solo lectura; se editan en la pestaña Relaciones)
         if (!esNuevo) {
             val relaciones = mundo.relaciones.filter { it.personaje1Id == p.id || it.personaje2Id == p.id }
-            Text("Relaciones", style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(top = 12.dp))
-            if (relaciones.isEmpty()) Text("Sin relaciones", style = MaterialTheme.typography.bodySmall)
+            Text(t.relaciones, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(top = 12.dp))
+            if (relaciones.isEmpty()) Text(t.sinRelacionesPersonaje, style = MaterialTheme.typography.bodySmall)
             relaciones.forEach { r ->
                 val otroId = if (r.personaje1Id == p.id) r.personaje2Id else r.personaje1Id
                 val otro = mundo.personajes.find { it.id == otroId }?.nombre ?: "?"
                 val nota = if (r.nota.isNotBlank()) " — ${r.nota}" else ""
-                Text("• ${r.tipo.texto} con $otro$nota", style = MaterialTheme.typography.bodyMedium)
+                Text("• " + t.relacionCon(t.tiposRelacion.getValue(r.tipo), otro) + nota, style = MaterialTheme.typography.bodyMedium)
             }
         }
     }

@@ -80,8 +80,8 @@ fun DialogoFormulario(
         onDismissRequest = alCancelar,
         title = { Text(titulo) },
         text = { Column(Modifier.verticalScroll(rememberScrollState())) { contenido() } },
-        confirmButton = { TextButton(onClick = alGuardar, enabled = puedeGuardar) { Text("Guardar") } },
-        dismissButton = { TextButton(onClick = alCancelar) { Text("Cancelar") } },
+        confirmButton = { TextButton(onClick = alGuardar, enabled = puedeGuardar) { Text(LocalTextos.current.guardar) } },
+        dismissButton = { TextButton(onClick = alCancelar) { Text(LocalTextos.current.cancelar) } },
     )
 }
 
@@ -90,12 +90,12 @@ fun DialogoFormulario(
 fun ConfirmarBorrado(nombre: String, aviso: String = "", alConfirmar: () -> Unit, alCancelar: () -> Unit) {
     AlertDialog(
         onDismissRequest = alCancelar,
-        title = { Text("¿Borrar \"$nombre\"?") },
+        title = { Text(LocalTextos.current.borrarTitulo(nombre)) },
         text = if (aviso.isNotEmpty()) ({ Text(aviso) }) else null,
         confirmButton = {
-            TextButton(onClick = alConfirmar) { Text("Borrar", color = MaterialTheme.colorScheme.error) }
+            TextButton(onClick = alConfirmar) { Text(LocalTextos.current.borrar, color = MaterialTheme.colorScheme.error) }
         },
-        dismissButton = { TextButton(onClick = alCancelar) { Text("Cancelar") } },
+        dismissButton = { TextButton(onClick = alCancelar) { Text(LocalTextos.current.cancelar) } },
     )
 }
 
@@ -103,8 +103,8 @@ fun ConfirmarBorrado(nombre: String, aviso: String = "", alConfirmar: () -> Unit
 @Composable
 fun BotonesEditarBorrar(alEditar: () -> Unit, alBorrar: () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        IconButton(onClick = alEditar) { Icon(Icons.Default.Edit, contentDescription = "Editar") }
-        IconButton(onClick = alBorrar) { Icon(Icons.Default.Delete, contentDescription = "Borrar") }
+        IconButton(onClick = alEditar) { Icon(Icons.Default.Edit, contentDescription = LocalTextos.current.editar) }
+        IconButton(onClick = alBorrar) { Icon(Icons.Default.Delete, contentDescription = LocalTextos.current.borrar) }
     }
 }
 

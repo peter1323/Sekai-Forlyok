@@ -60,11 +60,12 @@ fun colorNivel(nivel: Int): Color = COLORES_NIVEL[nivel.coerceAtMost(COLORES_NIV
 /** Pestaña de lugares: árbol con sangría (continente > reino > ciudad…). */
 @Composable
 fun PestanaLugares(mundo: Mundo, vm: MundoViewModel) {
+    val t = LocalTextos.current
     var editando by remember { mutableStateOf<Lugar?>(null) }
     var borrando by remember { mutableStateOf<Lugar?>(null) }
 
-    ConBotonAnadir("Añadir lugar", alPulsar = { editando = Lugar(id = nuevoId(), nombre = "") }) {
-        if (mundo.lugares.isEmpty()) ListaVacia("Todavía no hay lugares.")
+    ConBotonAnadir(t.anadirLugar, alPulsar = { editando = Lugar(id = nuevoId(), nombre = "") }) {
+        if (mundo.lugares.isEmpty()) ListaVacia(t.sinLugares)
         LazyColumn(contentPadding = PaddingValues(bottom = 88.dp)) {
             items(mundo.arbolLugares(), key = { it.first.id }) { (lugar, nivel) ->
                 Row(
@@ -73,11 +74,11 @@ fun PestanaLugares(mundo: Mundo, vm: MundoViewModel) {
                         .padding(start = 16.dp + 24.dp * nivel, top = 6.dp, bottom = 6.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Icon(iconoLugar(lugar.tipo), contentDescription = lugar.tipo.texto, tint = colorNivel(nivel))
+                    Icon(iconoLugar(lugar.tipo), contentDescription = t.tiposLugar.getValue(lugar.tipo), tint = colorNivel(nivel))
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
                         Text(lugar.nombre, style = MaterialTheme.typography.titleMedium, color = colorNivel(nivel))
-                        Text(lugar.tipo.texto, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(t.tiposLugar.getValue(lugar.tipo), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     BotonesEditarBorrar(alEditar = { editando = lugar }, alBorrar = { borrando = lugar })
                 }
@@ -90,26 +91,26 @@ fun PestanaLugares(mundo: Mundo, vm: MundoViewModel) {
         var l by remember(original.id) { mutableStateOf(original) }
         val esNuevo = mundo.lugares.none { it.id == original.id }
         DialogoFormulario(
-            titulo = if (esNuevo) "Nuevo lugar" else "Editar lugar",
+            titulo = if (esNuevo) t.nuevoLugar else t.editarLugar,
             puedeGuardar = l.nombre.isNotBlank(),
             alGuardar = { vm.guardarLugar(l); editando = null },
             alCancelar = { editando = null },
         ) {
-            OutlinedTextField(l.nombre, { l = l.copy(nombre = it) }, label = { Text("Nombre") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-            Desplegable("Tipo", TipoLugar.entries, l.tipo, { it.texto }) { l = l.copy(tipo = it) }
+            OutlinedTextField(l.nombre, { l = l.copy(nombre = it) }, label = { Text(t.nombre) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            Desplegable(t.tipo, TipoLugar.entries, l.tipo, { t.tiposLugar.getValue(it) }) { l = l.copy(tipo = it) }
             // Solo se ofrecen padres válidos: ni él mismo ni sus sublugares
             val padres = mundo.padresPosibles(if (esNuevo) null else l.id)
             Desplegable(
-                "Está dentro de", listOf<Lugar?>(null) + padres, padres.find { it.id == l.padreId },
-                { it?.let { p -> "${p.nombre} (${p.tipo.texto})" } ?: "Ninguno (nivel superior)" },
+                t.estaDentroDe, listOf<Lugar?>(null) + padres, padres.find { it.id == l.padreId },
+                { it?.let { p -> "${p.nombre} (${t.tiposLugar.getValue(p.tipo)})" } ?: t.ningunNivelSuperior },
             ) { l = l.copy(padreId = it?.id) }
-            OutlinedTextField(l.descripcion, { l = l.copy(descripcion = it) }, label = { Text("Descripción") }, minLines = 3, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(l.descripcion, { l = l.copy(descripcion = it) }, label = { Text(t.descripcion) }, minLines = 3, modifier = Modifier.fillMaxWidth())
         }
     }
     borrando?.let { l ->
         ConfirmarBorrado(
             nombre = l.nombre,
-            aviso = "Los lugares que contiene subirán un nivel y los personajes de aquí se quedarán sin lugar.",
+            aviso = t.avisoBorrarLugar,
             alConfirmar = { vm.borrarLugar(l.id); borrando = null },
             alCancelar = { borrando = null },
         )

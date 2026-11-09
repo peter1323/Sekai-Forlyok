@@ -1,5 +1,6 @@
 package com.sekaiforlyok.data
 
+import com.sekaiforlyok.model.Ajustes
 import com.sekaiforlyok.model.Mundo
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -46,11 +47,34 @@ class Repositorio(private val carpeta: String) {
     /** Sustituye la lista entera de mundos y la guarda en disco. */
     fun guardar(nuevos: List<Mundo>) {
         _mundos.value = nuevos
-        // Primero se escribe en un archivo temporal y luego se renombra:
-        // así, si la app se cierra a mitad, el JSON anterior sigue intacto.
-        val temporal = Path(carpeta, "mundos.json.tmp")
-        SystemFileSystem.sink(temporal).buffered().use { it.writeString(json.encodeToString(nuevos)) }
-        SystemFileSystem.atomicMove(temporal, archivo)
+        escribir(archivo, json.encodeToString(nuevos))
+    }
+
+    // ---------- AJUSTES (tema e idioma) ----------
+
+    private val archivoAjustes = Path(carpeta, "ajustes.json")
+
+    private val _ajustes = MutableStateFlow(cargarAjustes())
+    val ajustes: StateFlow<Ajustes> = _ajustes.asStateFlow()
+
+    /** Si no hay ajustes guardados (o están dañados) se usan los de por defecto: no se pierde nada importante. */
+    private fun cargarAjustes(): Ajustes = runCatching {
+        json.decodeFromString<Ajustes>(SystemFileSystem.source(archivoAjustes).buffered().use { it.readString() })
+    }.getOrDefault(Ajustes())
+
+    fun guardarAjustes(nuevos: Ajustes) {
+        _ajustes.value = nuevos
+        escribir(archivoAjustes, json.encodeToString(nuevos))
+    }
+
+    /**
+     * Escribe primero en un archivo temporal y luego lo renombra:
+     * así, si la app se cierra a mitad, el archivo anterior sigue intacto.
+     */
+    private fun escribir(destino: Path, texto: String) {
+        val temporal = Path("$destino.tmp")
+        SystemFileSystem.sink(temporal).buffered().use { it.writeString(texto) }
+        SystemFileSystem.atomicMove(temporal, destino)
     }
 
     /** Guarda una imagen en la carpeta de la app y devuelve su ruta. */

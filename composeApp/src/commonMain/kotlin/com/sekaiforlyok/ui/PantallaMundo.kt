@@ -29,12 +29,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.sekaiforlyok.viewmodel.MundoViewModel
 
-private val PESTANAS = listOf("Personajes", "Facciones", "Lugares", "Mapa", "Relaciones")
-
 /** Pantalla 2: un mundo con sus 5 pestañas. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantallaMundo(vm: MundoViewModel, alVolver: () -> Unit) {
+    val t = LocalTextos.current
     val mundo by vm.mundo.collectAsState()
     var pestana by rememberSaveable { mutableIntStateOf(0) }
 
@@ -50,7 +49,7 @@ fun PantallaMundo(vm: MundoViewModel, alVolver: () -> Unit) {
             TopAppBar(
                 title = { Text(actual.nombre) },
                 navigationIcon = {
-                    IconButton(onClick = alVolver) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver") }
+                    IconButton(onClick = alVolver) { Icon(Icons.AutoMirrored.Filled.ArrowBack, t.volver) }
                 },
             )
         },
@@ -58,7 +57,7 @@ fun PantallaMundo(vm: MundoViewModel, alVolver: () -> Unit) {
         Column(Modifier.padding(margen).fillMaxSize()) {
             // Pestañas desplazables para que quepan en pantallas de móvil estrechas
             PrimaryScrollableTabRow(selectedTabIndex = pestana, edgePadding = 0.dp) {
-                PESTANAS.forEachIndexed { i, titulo ->
+                t.pestanas.forEachIndexed { i, titulo ->
                     Tab(selected = pestana == i, onClick = { pestana = i }, text = { Text(titulo) })
                 }
             }

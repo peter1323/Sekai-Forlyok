@@ -11,10 +11,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -36,7 +38,8 @@ import com.sekaiforlyok.viewmodel.MundosViewModel
 /** Pantalla 1: lista de todos los mundos. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PantallaMundos(vm: MundosViewModel, alAbrirMundo: (String) -> Unit) {
+fun PantallaMundos(vm: MundosViewModel, alAbrirMundo: (String) -> Unit, alAbrirAjustes: () -> Unit) {
+    val t = LocalTextos.current
     val mundos by vm.mundos.collectAsState()
 
     // Estado de los diálogos: qué mundo se está editando o borrando (null = ninguno)
@@ -47,19 +50,20 @@ fun PantallaMundos(vm: MundosViewModel, alAbrirMundo: (String) -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Sekai Forlyok") },
-                // Crea mundos de ejemplo para probar la app rápidamente
-                actions = { TextButton(onClick = vm::cargarDatosDePrueba) { Text("Datos de prueba") } },
+                title = { Text(t.mundos) },
+                actions = {
+                    // Crea mundos de ejemplo para probar la app rápidamente
+                    TextButton(onClick = vm::cargarDatosDePrueba) { Text(t.datosDePrueba) }
+                    IconButton(onClick = alAbrirAjustes) { Icon(Icons.Default.Settings, t.ajustes) }
+                },
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { creando = true }) { Icon(Icons.Default.Add, "Crear mundo") }
+            FloatingActionButton(onClick = { creando = true }) { Icon(Icons.Default.Add, t.crearMundo) }
         },
     ) { margen ->
         if (mundos.isEmpty()) {
-            Column(Modifier.padding(margen)) {
-                ListaVacia("Aún no tienes mundos. Pulsa + para crear el primero, o \"Datos de prueba\" arriba para ver ejemplos.")
-            }
+            Column(Modifier.padding(margen)) { ListaVacia(t.sinMundos) }
         }
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(margen),
@@ -91,7 +95,7 @@ fun PantallaMundos(vm: MundosViewModel, alAbrirMundo: (String) -> Unit) {
     borrando?.let { mundo ->
         ConfirmarBorrado(
             nombre = mundo.nombre,
-            aviso = "Se borrarán todos sus personajes, facciones, lugares, relaciones y el mapa.",
+            aviso = t.avisoBorrarMundo,
             alConfirmar = { vm.borrarMundo(mundo.id); borrando = null },
             alCancelar = { borrando = null },
         )
@@ -100,6 +104,7 @@ fun PantallaMundos(vm: MundosViewModel, alAbrirMundo: (String) -> Unit) {
 
 @Composable
 private fun TarjetaMundo(mundo: Mundo, alPulsar: () -> Unit, alEditar: () -> Unit, alBorrar: () -> Unit) {
+    val t = LocalTextos.current
     Card(Modifier.fillMaxWidth().padding(vertical = 6.dp).clickable(onClick = alPulsar)) {
         Row(Modifier.padding(start = 16.dp, top = 12.dp, bottom = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
@@ -108,7 +113,7 @@ private fun TarjetaMundo(mundo: Mundo, alPulsar: () -> Unit, alEditar: () -> Uni
                     Text(mundo.descripcion, style = MaterialTheme.typography.bodyMedium, maxLines = 2)
                 }
                 Text(
-                    "${mundo.personajes.size} personajes · ${mundo.facciones.size} facciones · ${mundo.lugares.size} lugares",
+                    t.resumenMundo(mundo.personajes.size, mundo.facciones.size, mundo.lugares.size),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -121,16 +126,17 @@ private fun TarjetaMundo(mundo: Mundo, alPulsar: () -> Unit, alEditar: () -> Uni
 /** Formulario de mundo: nombre y descripción. Si [mundo] es null, es un mundo nuevo. */
 @Composable
 private fun DialogoMundo(mundo: Mundo?, alGuardar: (String, String) -> Unit, alCancelar: () -> Unit) {
+    val t = LocalTextos.current
     var nombre by remember { mutableStateOf(mundo?.nombre ?: "") }
     var descripcion by remember { mutableStateOf(mundo?.descripcion ?: "") }
 
     DialogoFormulario(
-        titulo = if (mundo == null) "Nuevo mundo" else "Editar mundo",
+        titulo = if (mundo == null) t.nuevoMundo else t.editarMundo,
         puedeGuardar = nombre.isNotBlank(),
         alGuardar = { alGuardar(nombre, descripcion) },
         alCancelar = alCancelar,
     ) {
-        OutlinedTextField(nombre, { nombre = it }, label = { Text("Nombre") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-        OutlinedTextField(descripcion, { descripcion = it }, label = { Text("Descripción") }, minLines = 3, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(nombre, { nombre = it }, label = { Text(t.nombre) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(descripcion, { descripcion = it }, label = { Text(t.descripcion) }, minLines = 3, modifier = Modifier.fillMaxWidth())
     }
 }

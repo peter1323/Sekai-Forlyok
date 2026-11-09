@@ -44,13 +44,14 @@ fun colorRelacion(tipo: TipoRelacion): Color = when (tipo) {
 /** Pestaña de relaciones entre personajes. */
 @Composable
 fun PestanaRelaciones(mundo: Mundo, vm: MundoViewModel) {
+    val t = LocalTextos.current
     var editando by remember { mutableStateOf<Relacion?>(null) }
     var borrando by remember { mutableStateOf<Relacion?>(null) }
     var avisoFaltanPersonajes by remember { mutableStateOf(false) }
 
     fun nombre(id: String) = mundo.personajes.find { it.id == id }?.nombre ?: "?"
 
-    ConBotonAnadir("Añadir relación", alPulsar = {
+    ConBotonAnadir(t.anadirRelacion, alPulsar = {
         // Hacen falta al menos 2 personajes para crear una relación
         if (mundo.personajes.size < 2) {
             avisoFaltanPersonajes = true
@@ -58,7 +59,7 @@ fun PestanaRelaciones(mundo: Mundo, vm: MundoViewModel) {
             editando = Relacion(nuevoId(), mundo.personajes[0].id, mundo.personajes[1].id)
         }
     }) {
-        if (mundo.relaciones.isEmpty()) ListaVacia("Todavía no hay relaciones.")
+        if (mundo.relaciones.isEmpty()) ListaVacia(t.sinRelaciones)
         LazyColumn(contentPadding = PaddingValues(bottom = 88.dp)) {
             items(mundo.relaciones, key = { it.id }) { r ->
                 Row(
@@ -67,7 +68,7 @@ fun PestanaRelaciones(mundo: Mundo, vm: MundoViewModel) {
                 ) {
                     Column(Modifier.weight(1f)) {
                         Text("${nombre(r.personaje1Id)}  ↔  ${nombre(r.personaje2Id)}", style = MaterialTheme.typography.titleMedium)
-                        Etiqueta(r.tipo.texto, colorRelacion(r.tipo))
+                        Etiqueta(t.tiposRelacion.getValue(r.tipo), colorRelacion(r.tipo))
                         if (r.nota.isNotBlank()) Text(r.nota, style = MaterialTheme.typography.bodySmall)
                     }
                     BotonesEditarBorrar(alEditar = { editando = r }, alBorrar = { borrando = r })
@@ -81,23 +82,23 @@ fun PestanaRelaciones(mundo: Mundo, vm: MundoViewModel) {
         var r by remember(original.id) { mutableStateOf(original) }
         val mismoPersonaje = r.personaje1Id == r.personaje2Id
         DialogoFormulario(
-            titulo = if (mundo.relaciones.none { it.id == original.id }) "Nueva relación" else "Editar relación",
+            titulo = if (mundo.relaciones.none { it.id == original.id }) t.nuevaRelacion else t.editarRelacion,
             puedeGuardar = !mismoPersonaje,
             alGuardar = { if (vm.guardarRelacion(r)) editando = null },
             alCancelar = { editando = null },
         ) {
             val personajes = mundo.personajes.sortedBy { it.nombre.lowercase() }
-            Desplegable("Personaje 1", personajes, personajes.find { it.id == r.personaje1Id }, { it?.nombre ?: "Elige uno" }) {
+            Desplegable(t.personaje1, personajes, personajes.find { it.id == r.personaje1Id }, { it?.nombre ?: t.eligeUno }) {
                 r = r.copy(personaje1Id = it!!.id)
             }
-            Desplegable("Personaje 2", personajes, personajes.find { it.id == r.personaje2Id }, { it?.nombre ?: "Elige uno" }) {
+            Desplegable(t.personaje2, personajes, personajes.find { it.id == r.personaje2Id }, { it?.nombre ?: t.eligeUno }) {
                 r = r.copy(personaje2Id = it!!.id)
             }
             if (mismoPersonaje) {
-                Text("Un personaje no puede relacionarse consigo mismo.", color = MaterialTheme.colorScheme.error)
+                Text(t.mismoPersonaje, color = MaterialTheme.colorScheme.error)
             }
-            Desplegable("Tipo de relación", TipoRelacion.entries, r.tipo, { it.texto }) { r = r.copy(tipo = it) }
-            OutlinedTextField(r.nota, { r = r.copy(nota = it) }, label = { Text("Nota (opcional)") }, minLines = 2, modifier = Modifier.fillMaxWidth())
+            Desplegable(t.tipoRelacion, TipoRelacion.entries, r.tipo, { t.tiposRelacion.getValue(it) }) { r = r.copy(tipo = it) }
+            OutlinedTextField(r.nota, { r = r.copy(nota = it) }, label = { Text(t.notaOpcional) }, minLines = 2, modifier = Modifier.fillMaxWidth())
         }
     }
     borrando?.let { r ->
@@ -110,9 +111,9 @@ fun PestanaRelaciones(mundo: Mundo, vm: MundoViewModel) {
     if (avisoFaltanPersonajes) {
         AlertDialog(
             onDismissRequest = { avisoFaltanPersonajes = false },
-            title = { Text("Faltan personajes") },
-            text = { Text("Necesitas al menos 2 personajes para crear una relación.") },
-            confirmButton = { TextButton(onClick = { avisoFaltanPersonajes = false }) { Text("Entendido") } },
+            title = { Text(t.faltanPersonajes) },
+            text = { Text(t.faltanPersonajesTexto) },
+            confirmButton = { TextButton(onClick = { avisoFaltanPersonajes = false }) { Text(t.entendido) } },
         )
     }
 }

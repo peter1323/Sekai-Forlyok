@@ -43,6 +43,8 @@ kotlin {
                 implementation(compose.desktop.currentOs)
                 // Hilo principal de la interfaz en escritorio (lo usan los ViewModel)
                 implementation(libs.kotlinx.coroutines.swing)
+                // Para pintar la barra de la ventana de Windows con los colores de la app
+                implementation(libs.jna)
             }
         }
     }
@@ -61,6 +63,8 @@ compose.desktop {
             packageVersion = "1.0.0"
             description = "Creador de personajes y mundos al estilo manhwa"
             windows {
+                // Icono de la brújula para el .exe, el acceso directo y el instalador
+                iconFile.set(project.file("icono.ico"))
                 menu = true
                 shortcut = true
                 dirChooser = true
