@@ -21,12 +21,25 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.sekaiforlyok.model.Mundo
 import com.sekaiforlyok.model.Relacion
 import com.sekaiforlyok.model.TipoRelacion
 import com.sekaiforlyok.viewmodel.MundoViewModel
 import com.sekaiforlyok.viewmodel.nuevoId
+
+/** Color de cada tipo de relación. */
+fun colorRelacion(tipo: TipoRelacion): Color = when (tipo) {
+    TipoRelacion.AMIGOS -> Color(0xFF4CAF50)          // Verde
+    TipoRelacion.RIVALES -> Color(0xFFFF9800)         // Naranja
+    TipoRelacion.ENEMIGOS -> Color(0xFFE53935)        // Rojo
+    TipoRelacion.PAREJA -> Color(0xFFEC407A)          // Rosa
+    TipoRelacion.FAMILIA -> Color(0xFF42A5F5)         // Azul
+    TipoRelacion.MAESTRO_ALUMNO -> Color(0xFFAB47BC)  // Morado
+    TipoRelacion.ALIADOS -> Color(0xFF26A69A)         // Turquesa
+    TipoRelacion.OTRO -> Color(0xFF9E9E9E)            // Gris
+}
 
 /** Pestaña de relaciones entre personajes. */
 @Composable
@@ -54,7 +67,7 @@ fun PestanaRelaciones(mundo: Mundo, vm: MundoViewModel) {
                 ) {
                     Column(Modifier.weight(1f)) {
                         Text("${nombre(r.personaje1Id)}  ↔  ${nombre(r.personaje2Id)}", style = MaterialTheme.typography.titleMedium)
-                        Text(r.tipo.texto, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+                        Etiqueta(r.tipo.texto, colorRelacion(r.tipo))
                         if (r.nota.isNotBlank()) Text(r.nota, style = MaterialTheme.typography.bodySmall)
                     }
                     BotonesEditarBorrar(alEditar = { editando = r }, alBorrar = { borrando = r })

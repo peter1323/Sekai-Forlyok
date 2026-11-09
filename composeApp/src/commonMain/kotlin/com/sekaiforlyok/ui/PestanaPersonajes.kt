@@ -25,7 +25,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -126,7 +125,7 @@ private fun FilaPersonaje(p: Personaje, faccion: Faccion?, alEditar: () -> Unit,
             // Poderes como pequeñas etiquetas
             if (p.poderes.isNotEmpty()) {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    p.poderes.forEach { SuggestionChip(onClick = {}, label = { Text(it) }) }
+                    p.poderes.forEach { Etiqueta(it, MaterialTheme.colorScheme.primary) }
                 }
             }
         }

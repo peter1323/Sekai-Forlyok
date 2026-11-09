@@ -1,5 +1,8 @@
 package com.sekaiforlyok.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -103,6 +106,20 @@ fun BotonesEditarBorrar(alEditar: () -> Unit, alBorrar: () -> Unit) {
         IconButton(onClick = alEditar) { Icon(Icons.Default.Edit, contentDescription = "Editar") }
         IconButton(onClick = alBorrar) { Icon(Icons.Default.Delete, contentDescription = "Borrar") }
     }
+}
+
+/** Etiqueta pequeña con fondo de color suave y texto del mismo color (poderes, tipo de relación…). */
+@Composable
+fun Etiqueta(texto: String, color: Color) {
+    Text(
+        texto,
+        color = color,
+        style = MaterialTheme.typography.labelMedium,
+        modifier = Modifier
+            .padding(top = 4.dp)
+            .background(color.copy(alpha = 0.18f), RoundedCornerShape(12.dp))
+            .padding(horizontal = 10.dp, vertical = 4.dp),
+    )
 }
 
 /** Texto que se muestra cuando una lista está vacía. */
