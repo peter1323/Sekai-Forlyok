@@ -21,6 +21,7 @@ import com.sekaiforlyok.viewmodel.mundosDePrueba
 import com.sekaiforlyok.viewmodel.padresPosibles
 import com.sekaiforlyok.viewmodel.personajesOrdenados
 import com.sekaiforlyok.viewmodel.ponerMiembros
+import com.sekaiforlyok.viewmodel.ponerNacidos
 import com.sekaiforlyok.viewmodel.relacionarFacciones
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -186,5 +187,19 @@ class ReglasMundoTest {
         assertEquals(listOf(TipoRelacionFaccion.ENEMIGAS, TipoRelacionFaccion.NEUTRALES), m.relacionesFacciones.map { it.tipo })
         // Al borrar B desaparecen sus dos relaciones
         assertEquals(emptyList(), m.borrarFaccion("b").relacionesFacciones)
+    }
+    @Test
+    fun alElegirPersonajesDeUnLugarSeMuevenOSeQuedanSinLugar() {
+        val m = Mundo(
+            "m", "M",
+            lugares = listOf(Lugar("l1", "Uno"), Lugar("l2", "Dos")),
+            personajes = listOf(
+                Personaje("a", "A", lugarId = "l1"), // Se desmarca: queda sin lugar
+                Personaje("b", "B", lugarId = "l2"), // Se marca: pasa de Dos a Uno
+                Personaje("c", "C", lugarId = "l2"), // No se toca
+            ),
+        )
+        val r = m.ponerNacidos("l1", setOf("b")).personajes.associate { it.id to it.lugarId }
+        assertEquals(mapOf("a" to null, "b" to "l1", "c" to "l2"), r)
     }
 }

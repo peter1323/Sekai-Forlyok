@@ -80,7 +80,7 @@ class MundoViewModel(private val repo: Repositorio, private val mundoId: String)
      * Guarda un lugar. Si el padre elegido no está permitido (sería un bucle), lo deja sin padre.
      * Si cambia de padre, pierde su posición sobre la imagen del padre anterior.
      */
-    fun guardarLugar(l: Lugar) = cambiar { m ->
+    fun guardarLugar(l: Lugar, nacidos: Set<String>) = cambiar { m ->
         val padreValido = l.padreId == null || m.padresPosibles(l.id).any { it.id == l.padreId }
         val padre = if (padreValido) l.padreId else null
         val mismoPadre = m.lugares.find { it.id == l.id }?.padreId == padre
@@ -90,7 +90,7 @@ class MundoViewModel(private val repo: Repositorio, private val mundoId: String)
             xEnPadre = if (mismoPadre) l.xEnPadre else null,
             yEnPadre = if (mismoPadre) l.yEnPadre else null,
         )
-        m.copy(lugares = m.lugares.reemplazarOAnadir(limpio) { it.id })
+        m.copy(lugares = m.lugares.reemplazarOAnadir(limpio) { it.id }).ponerNacidos(l.id, nacidos)
     }
 
     /** Borra un lugar (y su imagen, si tenía). */

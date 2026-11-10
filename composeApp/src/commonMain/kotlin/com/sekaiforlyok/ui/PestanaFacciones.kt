@@ -147,7 +147,6 @@ fun PestanaFacciones(mundo: Mundo, vm: MundoViewModel) {
         var miembros by remember(original.id) {
             mutableStateOf(mundo.personajes.filter { it.faccionId == original.id }.map { it.id }.toSet())
         }
-        var moviendo by remember { mutableStateOf<Personaje?>(null) } // Pendiente de confirmar el cambio de facción
         DialogoFormulario(
             titulo = if (mundo.facciones.none { it.id == original.id }) t.nuevaFaccion else t.editarFaccion,
             puedeGuardar = f.nombre.isNotBlank(),
@@ -156,42 +155,12 @@ fun PestanaFacciones(mundo: Mundo, vm: MundoViewModel) {
         ) {
             OutlinedTextField(f.nombre, { f = f.copy(nombre = it) }, label = { Text(t.nombre) }, singleLine = true, modifier = Modifier.fillMaxWidth())
             OutlinedTextField(f.descripcion, { f = f.copy(descripcion = it) }, label = { Text(t.descripcion) }, minLines = 3, modifier = Modifier.fillMaxWidth())
-            Text(t.miembros(miembros.size), style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(top = 8.dp))
-            if (mundo.personajes.isEmpty()) Text(t.sinPersonajes, style = MaterialTheme.typography.bodySmall)
-            // Todos los personajes: marcar = entra en la facción, desmarcar = se queda sin facción
-            mundo.personajesOrdenados().forEach { p ->
-                val otra = mundo.facciones.find { it.id == p.faccionId && it.id != original.id }
-                Row(
-                    Modifier.fillMaxWidth().clickable {
-                        when {
-                            p.id in miembros -> miembros = miembros - p.id
-                            otra != null -> moviendo = p // Está en otra facción: se pregunta antes
-                            else -> miembros = miembros + p.id
-                        }
-                    }.padding(vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Checkbox(checked = p.id in miembros, onCheckedChange = null)
-                    Spacer(Modifier.width(8.dp))
-                    AvatarPersonaje(p, 32.dp)
-                    Spacer(Modifier.width(8.dp))
-                    Column {
-                        Text(p.nombre)
-                        // Avisa de que al marcarlo se cambiará de facción
-                        if (otra != null) Text(t.ahoraEn(otra.nombre), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                }
-            }
-        }
-        // Confirmación al pasar a alguien de otra facción a esta
-        moviendo?.let { p ->
-            val de = mundo.facciones.find { it.id == p.faccionId }?.nombre ?: ""
-            AlertDialog(
-                onDismissRequest = { moviendo = null },
-                title = { Text(t.moverTitulo) },
-                text = { Text(t.moverDeFaccion(p.nombre, de, f.nombre.ifBlank { t.nuevaFaccion })) },
-                confirmButton = { TextButton(onClick = { miembros = miembros + p.id; moviendo = null }) { Text(t.si) } },
-                dismissButton = { TextButton(onClick = { moviendo = null }) { Text(t.no) } },
+            ElegirPersonajes(
+                mundo, t.miembros(miembros.size), miembros, { miembros = it },
+                // Nombre de la otra facción en la que está, si está en otra
+                otroGrupo = { p -> mundo.facciones.find { it.id == p.faccionId && it.id != original.id }?.nombre },
+                tituloMover = t.moverTitulo,
+                destino = f.nombre.ifBlank { t.nuevaFaccion },
             )
         }
     }

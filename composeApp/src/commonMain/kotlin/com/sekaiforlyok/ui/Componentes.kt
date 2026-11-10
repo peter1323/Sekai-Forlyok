@@ -1,6 +1,13 @@
 package com.sekaiforlyok.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Checkbox
+import com.sekaiforlyok.model.Mundo
+import com.sekaiforlyok.model.Personaje
+import com.sekaiforlyok.viewmodel.personajesOrdenados
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.Box
@@ -131,4 +138,57 @@ fun ListaVacia(texto: String) {
         style = MaterialTheme.typography.bodyLarge,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
+}
+
+/**
+ * Lista de todos los personajes con casillas para elegir los de un grupo (una facción, un lugar…).
+ * Si se marca a alguien que ya está en otro grupo ([otroGrupo] devuelve su nombre), se pregunta antes de moverlo.
+ */
+@Composable
+fun ElegirPersonajes(
+    mundo: Mundo,
+    titulo: String,
+    marcados: Set<String>,
+    alCambiar: (Set<String>) -> Unit,
+    otroGrupo: (Personaje) -> String?,
+    tituloMover: String,
+    destino: String,
+) {
+    val t = LocalTextos.current
+    var moviendo by remember { mutableStateOf<Personaje?>(null) } // Pendiente de confirmar el cambio
+    Text(titulo, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(top = 8.dp))
+    if (mundo.personajes.isEmpty()) Text(t.sinPersonajes, style = MaterialTheme.typography.bodySmall)
+    // Marcar = entra en el grupo, desmarcar = se queda sin grupo
+    mundo.personajesOrdenados().forEach { p ->
+        val otro = otroGrupo(p)
+        Row(
+            Modifier.fillMaxWidth().clickable {
+                when {
+                    p.id in marcados -> alCambiar(marcados - p.id)
+                    otro != null -> moviendo = p // Está en otro grupo: se pregunta antes
+                    else -> alCambiar(marcados + p.id)
+                }
+            }.padding(vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Checkbox(checked = p.id in marcados, onCheckedChange = null)
+            Spacer(Modifier.width(8.dp))
+            AvatarPersonaje(p, 32.dp)
+            Spacer(Modifier.width(8.dp))
+            Column {
+                Text(p.nombre)
+                if (otro != null) Text(t.ahoraEn(otro), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+    }
+    moviendo?.let { p ->
+        val de = otroGrupo(p) ?: ""
+        AlertDialog(
+            onDismissRequest = { moviendo = null },
+            title = { Text(tituloMover) },
+            text = { Text(t.moverDeFaccion(p.nombre, de, destino)) },
+            confirmButton = { TextButton(onClick = { alCambiar(marcados + p.id); moviendo = null }) { Text(t.si) } },
+            dismissButton = { TextButton(onClick = { moviendo = null }) { Text(t.no) } },
+        )
+    }
 }

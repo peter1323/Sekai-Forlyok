@@ -138,6 +138,20 @@ fun Mundo.ponerMiembros(faccionId: String, miembros: Set<String>): Mundo = copy(
     },
 )
 
+/**
+ * Deja como personajes de [lugarId] solo a los de [nacidos] (su lugar de origen).
+ * Los marcados que eran de otro lugar se cambian a este; los desmarcados se quedan sin lugar.
+ */
+fun Mundo.ponerNacidos(lugarId: String, nacidos: Set<String>): Mundo = copy(
+    personajes = personajes.map {
+        when {
+            it.id in nacidos -> it.copy(lugarId = lugarId)
+            it.lugarId == lugarId -> it.copy(lugarId = null)
+            else -> it
+        }
+    },
+)
+
 /** Pone cómo se llevan dos facciones. Si ya tenían una relación, se cambia (nunca hay dos entre las mismas). */
 fun Mundo.relacionarFacciones(a: String, b: String, tipo: TipoRelacionFaccion): Mundo {
     if (a == b) return this

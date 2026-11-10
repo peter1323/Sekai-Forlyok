@@ -167,6 +167,9 @@ class Textos(
     val moverDeFaccion: (personaje: String, de: String, a: String) -> String,
     val comoSeLlevan: String,
     val tiposRelacionFaccion: Map<TipoRelacionFaccion, String>,
+    val sublugaresN: (Int) -> String,
+    val nacidosAqui: (Int) -> String,
+    val moverLugarTitulo: String,
 )
 
 val ESPANOL = Textos(
@@ -339,6 +342,9 @@ val ESPANOL = Textos(
         TipoRelacionFaccion.NEUTRALES to "Neutrales",
         TipoRelacionFaccion.ENEMIGAS to "Enemigas",
     ),
+    sublugaresN = { if (it == 1) "1 sublugar" else "$it sublugares" },
+    nacidosAqui = { if (it == 1) "1 personaje" else "$it personajes" },
+    moverLugarTitulo = "¿Cambiar de lugar?",
 )
 
 val INGLES = Textos(
@@ -511,6 +517,9 @@ val INGLES = Textos(
         TipoRelacionFaccion.NEUTRALES to "Neutral",
         TipoRelacionFaccion.ENEMIGAS to "Enemies",
     ),
+    sublugaresN = { if (it == 1) "1 sub-place" else "$it sub-places" },
+    nacidosAqui = { if (it == 1) "1 character" else "$it characters" },
+    moverLugarTitulo = "Change place?",
 )
 
 fun textosDe(idioma: Idioma): Textos = when (idioma) {
