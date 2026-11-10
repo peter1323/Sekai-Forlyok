@@ -1,7 +1,10 @@
 package com.sekaiforlyok.ui
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -9,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -18,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,6 +33,7 @@ import com.sekaiforlyok.model.Relacion
 import com.sekaiforlyok.model.TipoRelacion
 import com.sekaiforlyok.viewmodel.MundoViewModel
 import com.sekaiforlyok.viewmodel.nuevoId
+import com.sekaiforlyok.viewmodel.personajesOrdenados
 
 /** Color de cada tipo de relación. */
 fun colorRelacion(tipo: TipoRelacion): Color = when (tipo) {
@@ -48,6 +54,8 @@ fun PestanaRelaciones(mundo: Mundo, vm: MundoViewModel) {
     var editando by remember { mutableStateOf<Relacion?>(null) }
     var borrando by remember { mutableStateOf<Relacion?>(null) }
     var avisoFaltanPersonajes by remember { mutableStateOf(false) }
+    var enConstelacion by rememberSaveable { mutableStateOf(false) }
+    var personajeVisto by remember { mutableStateOf<String?>(null) } // Círculo pulsado en la constelación
 
     fun nombre(id: String) = mundo.personajes.find { it.id == id }?.nombre ?: "?"
 
@@ -59,6 +67,16 @@ fun PestanaRelaciones(mundo: Mundo, vm: MundoViewModel) {
             editando = Relacion(nuevoId(), mundo.personajes[0].id, mundo.personajes[1].id)
         }
     }) {
+      Column {
+        // Elegir cómo verlas: en lista o como constelación
+        Row(Modifier.padding(horizontal = 12.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(!enConstelacion, onClick = { enConstelacion = false }, label = { Text(t.verLista) })
+            FilterChip(enConstelacion, onClick = { enConstelacion = true }, label = { Text(t.constelacion) })
+        }
+        if (enConstelacion) {
+            ConstelacionRelaciones(mundo, vm, alPulsar = { personajeVisto = it })
+            return@Column
+        }
         if (mundo.relaciones.isEmpty()) ListaVacia(t.sinRelaciones)
         LazyColumn(contentPadding = PaddingValues(bottom = 88.dp)) {
             items(mundo.relaciones, key = { it.id }) { r ->
@@ -76,6 +94,7 @@ fun PestanaRelaciones(mundo: Mundo, vm: MundoViewModel) {
                 HorizontalDivider()
             }
         }
+      }
     }
 
     editando?.let { original ->
@@ -108,6 +127,28 @@ fun PestanaRelaciones(mundo: Mundo, vm: MundoViewModel) {
             alCancelar = { borrando = null },
         )
     }
+    // Diálogo: personaje pulsado en la constelación, con todas sus relaciones
+    mundo.personajes.find { it.id == personajeVisto }?.let { p ->
+        val suyas = mundo.relaciones.filter { it.personaje1Id == p.id || it.personaje2Id == p.id }
+        AlertDialog(
+            onDismissRequest = { personajeVisto = null },
+            icon = { AvatarPersonaje(p, 64.dp) },
+            title = { Text(p.nombre) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    if (suyas.isEmpty()) Text(t.sinRelacionesPersonaje)
+                    suyas.forEach { r ->
+                        val otro = nombre(if (r.personaje1Id == p.id) r.personaje2Id else r.personaje1Id)
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Etiqueta(t.tiposRelacion.getValue(r.tipo), colorRelacion(r.tipo))
+                            Text(otro)
+                        }
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { personajeVisto = null }) { Text(t.cerrar) } },
+        )
+    }
     if (avisoFaltanPersonajes) {
         AlertDialog(
             onDismissRequest = { avisoFaltanPersonajes = false },
@@ -115,5 +156,30 @@ fun PestanaRelaciones(mundo: Mundo, vm: MundoViewModel) {
             text = { Text(t.faltanPersonajesTexto) },
             confirmButton = { TextButton(onClick = { avisoFaltanPersonajes = false }) { Text(t.entendido) } },
         )
+    }
+}
+
+/**
+ * Relaciones como constelación: cada personaje es un círculo con su personita (o su rango)
+ * y cada relación una línea del color de su tipo. Debajo de los botones sale la leyenda de colores.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ConstelacionRelaciones(mundo: Mundo, vm: MundoViewModel, alPulsar: (String) -> Unit) {
+    val t = LocalTextos.current
+    val tipos = mundo.relaciones.map { it.tipo }.distinct()
+    if (tipos.isNotEmpty()) {
+        FlowRow(Modifier.padding(horizontal = 12.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            tipos.forEach { Etiqueta(t.tiposRelacion.getValue(it), colorRelacion(it)) }
+        }
+    }
+    val personajes = mundo.personajesOrdenados()
+    Constelacion(
+        nodos = personajes.map { NodoConstelacion(it.id, it.nombre, it.posX, it.posY) },
+        enlaces = mundo.relaciones.map { EnlaceConstelacion(it.personaje1Id, it.personaje2Id, colorRelacion(it.tipo)) },
+        alMover = vm::moverPersonaje,
+        alPulsar = alPulsar,
+    ) { nodo ->
+        personajes.find { it.id == nodo.id }?.let { AvatarPersonaje(it, 72.dp) }
     }
 }

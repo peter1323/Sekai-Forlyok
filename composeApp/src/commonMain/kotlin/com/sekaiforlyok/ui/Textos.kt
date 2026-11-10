@@ -1,7 +1,10 @@
 package com.sekaiforlyok.ui
 
 import androidx.compose.runtime.staticCompositionLocalOf
+import com.sekaiforlyok.model.Accesorio
 import com.sekaiforlyok.model.Idioma
+import com.sekaiforlyok.model.Peinado
+import com.sekaiforlyok.model.Ropa
 import com.sekaiforlyok.model.TipoLugar
 import com.sekaiforlyok.model.TipoRelacion
 
@@ -117,6 +120,38 @@ class Textos(
     val autor: String,
     val plataformas: String,
     val descargas: String,
+    // Constelación
+    val constelacion: String,
+    val verLista: String,
+    val ayudaConstelacion: String,
+    val enlazadoCon: String,
+    // Imagen de un lugar
+    val imagenDelLugar: String,
+    val imagenLugarExplicacion: String,
+    val anadirImagen: String,
+    val quitarImagen: String,
+    val avisoQuitarImagen: String,
+    val ayudaImagenLugar: String,
+    val queHayAqui: String,
+    val nuevoPunto: String,
+    val nombrePunto: String,
+    val oColocaSublugar: String,
+    val sinSublugares: String,
+    val puntoLibre: String,
+    // Personita chibi
+    val personita: String,
+    val crearPersonita: String,
+    val quitarPersonita: String,
+    val peinado: String,
+    val colorPiel: String,
+    val colorPelo: String,
+    val colorOjos: String,
+    val ropa: String,
+    val colorRopa: String,
+    val accesorio: String,
+    val peinados: Map<Peinado, String>,
+    val ropas: Map<Ropa, String>,
+    val accesorios: Map<Accesorio, String>,
 )
 
 val ESPANOL = Textos(
@@ -226,6 +261,51 @@ val ESPANOL = Textos(
     autor = "Autor",
     plataformas = "Disponible para Windows y Android (móvil).",
     descargas = "Descargas y actualizaciones",
+    constelacion = "Constelación",
+    verLista = "Lista",
+    ayudaConstelacion = "Toca un círculo para abrirlo y arrástralo para moverlo. Los enlaces se eligen al editar.",
+    enlazadoCon = "Enlazado con (constelación)",
+    imagenDelLugar = "Imagen del lugar",
+    imagenLugarExplicacion = "Añade una imagen JPG o PNG de este lugar (por ejemplo, el plano de una ciudad). Después podrás marcar en ella sus sublugares o puntos como \"Plaza central\" o \"Ayuntamiento\".",
+    anadirImagen = "Añadir imagen",
+    quitarImagen = "Quitar imagen",
+    avisoQuitarImagen = "Se borrarán la imagen y sus puntos. Los sublugares no se borran, solo se quitan de la imagen.",
+    ayudaImagenLugar = "Toca la imagen para poner un punto o un sublugar. Pellizca o usa la rueda del ratón para hacer zoom.",
+    queHayAqui = "¿Qué hay aquí?",
+    nuevoPunto = "Punto nuevo",
+    nombrePunto = "Nombre (por ejemplo, Plaza central)",
+    oColocaSublugar = "O coloca un sublugar",
+    sinSublugares = "Este lugar no tiene sublugares. Créalos en la lista con \"Está dentro de\".",
+    puntoLibre = "Punto de la imagen",
+    personita = "Personita",
+    crearPersonita = "Crear personita",
+    quitarPersonita = "Quitar personita",
+    peinado = "Peinado",
+    colorPiel = "Piel",
+    colorPelo = "Color de pelo",
+    colorOjos = "Ojos",
+    ropa = "Ropa",
+    colorRopa = "Color de la ropa",
+    accesorio = "Accesorio",
+    peinados = mapOf(
+        Peinado.CORTO to "Corto",
+        Peinado.PUNTAS to "De punta",
+        Peinado.MELENA to "Melena",
+        Peinado.LARGO to "Largo",
+        Peinado.COLETA to "Coleta",
+        Peinado.DOS_COLETAS to "Dos coletas",
+        Peinado.MONO to "Moño",
+        Peinado.CALVO to "Calvo",
+    ),
+    ropas = mapOf(Ropa.CAMISA to "Camisa", Ropa.CAPA to "Capa", Ropa.ARMADURA to "Armadura", Ropa.TUNICA to "Túnica"),
+    accesorios = mapOf(
+        Accesorio.NINGUNO to "Ninguno",
+        Accesorio.GAFAS to "Gafas",
+        Accesorio.CORONA to "Corona",
+        Accesorio.CUERNOS to "Cuernos",
+        Accesorio.PARCHE to "Parche",
+        Accesorio.CICATRIZ to "Cicatriz",
+    ),
 )
 
 val INGLES = Textos(
@@ -335,6 +415,51 @@ val INGLES = Textos(
     autor = "Author",
     plataformas = "Available for Windows and Android (mobile).",
     descargas = "Downloads and updates",
+    constelacion = "Constellation",
+    verLista = "List",
+    ayudaConstelacion = "Tap a circle to open it and drag it to move it. Links are chosen when editing.",
+    enlazadoCon = "Linked to (constellation)",
+    imagenDelLugar = "Location image",
+    imagenLugarExplicacion = "Add a JPG or PNG image of this location (for example, a city plan). Then you can mark its sub-locations or points like \"Main square\" or \"Town hall\" on it.",
+    anadirImagen = "Add image",
+    quitarImagen = "Remove image",
+    avisoQuitarImagen = "The image and its points will be deleted. Sub-locations aren't deleted, they're only removed from the image.",
+    ayudaImagenLugar = "Tap the image to add a point or a sub-location. Pinch or use the mouse wheel to zoom.",
+    queHayAqui = "What's here?",
+    nuevoPunto = "New point",
+    nombrePunto = "Name (for example, Main square)",
+    oColocaSublugar = "Or place a sub-location",
+    sinSublugares = "This location has no sub-locations. Create them in the list with \"Is inside\".",
+    puntoLibre = "Image point",
+    personita = "Chibi",
+    crearPersonita = "Create chibi",
+    quitarPersonita = "Remove chibi",
+    peinado = "Hairstyle",
+    colorPiel = "Skin",
+    colorPelo = "Hair color",
+    colorOjos = "Eyes",
+    ropa = "Clothes",
+    colorRopa = "Clothes color",
+    accesorio = "Accessory",
+    peinados = mapOf(
+        Peinado.CORTO to "Short",
+        Peinado.PUNTAS to "Spiky",
+        Peinado.MELENA to "Bob",
+        Peinado.LARGO to "Long",
+        Peinado.COLETA to "Ponytail",
+        Peinado.DOS_COLETAS to "Pigtails",
+        Peinado.MONO to "Bun",
+        Peinado.CALVO to "Bald",
+    ),
+    ropas = mapOf(Ropa.CAMISA to "Shirt", Ropa.CAPA to "Cape", Ropa.ARMADURA to "Armor", Ropa.TUNICA to "Robe"),
+    accesorios = mapOf(
+        Accesorio.NINGUNO to "None",
+        Accesorio.GAFAS to "Glasses",
+        Accesorio.CORONA to "Crown",
+        Accesorio.CUERNOS to "Horns",
+        Accesorio.PARCHE to "Eye patch",
+        Accesorio.CICATRIZ to "Scar",
+    ),
 )
 
 fun textosDe(idioma: Idioma): Textos = when (idioma) {

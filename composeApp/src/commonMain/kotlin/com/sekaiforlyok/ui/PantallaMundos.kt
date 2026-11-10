@@ -11,6 +11,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material3.Checkbox
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -38,7 +40,12 @@ import com.sekaiforlyok.viewmodel.MundosViewModel
 /** Pantalla 1: lista de todos los mundos. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PantallaMundos(vm: MundosViewModel, alAbrirMundo: (String) -> Unit, alAbrirAjustes: () -> Unit) {
+fun PantallaMundos(
+    vm: MundosViewModel,
+    alAbrirMundo: (String) -> Unit,
+    alAbrirAjustes: () -> Unit,
+    alAbrirConstelacion: () -> Unit,
+) {
     val t = LocalTextos.current
     val mundos by vm.mundos.collectAsState()
 
@@ -54,6 +61,8 @@ fun PantallaMundos(vm: MundosViewModel, alAbrirMundo: (String) -> Unit, alAbrirA
                 actions = {
                     // Crea mundos de ejemplo para probar la app rápidamente
                     TextButton(onClick = vm::cargarDatosDePrueba) { Text(t.datosDePrueba) }
+                    // Ver todos los mundos como constelación, con sus enlaces
+                    IconButton(onClick = alAbrirConstelacion) { Icon(Icons.Default.AutoAwesome, t.constelacion) }
                     IconButton(onClick = alAbrirAjustes) { Icon(Icons.Default.Settings, t.ajustes) }
                 },
             )
@@ -84,8 +93,9 @@ fun PantallaMundos(vm: MundosViewModel, alAbrirMundo: (String) -> Unit, alAbrirA
     if (creando || editando != null) {
         DialogoMundo(
             mundo = editando,
-            alGuardar = { nombre, descripcion ->
-                vm.guardarMundo(editando?.id, nombre, descripcion)
+            otros = mundos.filter { it.id != editando?.id },
+            alGuardar = { nombre, descripcion, enlaces ->
+                vm.guardarMundo(editando?.id, nombre, descripcion, enlaces)
                 creando = false; editando = null
             },
             alCancelar = { creando = false; editando = null },
@@ -123,20 +133,41 @@ private fun TarjetaMundo(mundo: Mundo, alPulsar: () -> Unit, alEditar: () -> Uni
     }
 }
 
-/** Formulario de mundo: nombre y descripción. Si [mundo] es null, es un mundo nuevo. */
+/**
+ * Formulario de mundo: nombre, descripción y con qué otros mundos está enlazado (líneas de la constelación).
+ * Si [mundo] es null, es un mundo nuevo.
+ */
 @Composable
-private fun DialogoMundo(mundo: Mundo?, alGuardar: (String, String) -> Unit, alCancelar: () -> Unit) {
+private fun DialogoMundo(
+    mundo: Mundo?,
+    otros: List<Mundo>,
+    alGuardar: (String, String, Set<String>) -> Unit,
+    alCancelar: () -> Unit,
+) {
     val t = LocalTextos.current
     var nombre by remember { mutableStateOf(mundo?.nombre ?: "") }
     var descripcion by remember { mutableStateOf(mundo?.descripcion ?: "") }
+    var enlaces by remember { mutableStateOf(mundo?.enlaces?.toSet() ?: emptySet()) }
 
     DialogoFormulario(
         titulo = if (mundo == null) t.nuevoMundo else t.editarMundo,
         puedeGuardar = nombre.isNotBlank(),
-        alGuardar = { alGuardar(nombre, descripcion) },
+        alGuardar = { alGuardar(nombre, descripcion, enlaces) },
         alCancelar = alCancelar,
     ) {
         OutlinedTextField(nombre, { nombre = it }, label = { Text(t.nombre) }, singleLine = true, modifier = Modifier.fillMaxWidth())
         OutlinedTextField(descripcion, { descripcion = it }, label = { Text(t.descripcion) }, minLines = 3, modifier = Modifier.fillMaxWidth())
+        if (otros.isNotEmpty()) {
+            Text(t.enlazadoCon, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(top = 8.dp))
+            otros.forEach { o ->
+                Row(
+                    Modifier.fillMaxWidth().clickable { enlaces = if (o.id in enlaces) enlaces - o.id else enlaces + o.id },
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Checkbox(checked = o.id in enlaces, onCheckedChange = null)
+                    Text(o.nombre)
+                }
+            }
+        }
     }
 }

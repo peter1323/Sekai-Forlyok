@@ -11,6 +11,9 @@ import com.sekaiforlyok.viewmodel.arbolLugares
 import com.sekaiforlyok.viewmodel.borrarFaccion
 import com.sekaiforlyok.viewmodel.borrarLugar
 import com.sekaiforlyok.viewmodel.borrarPersonaje
+import com.sekaiforlyok.viewmodel.cambiarEnlaces
+import com.sekaiforlyok.viewmodel.parejasEnlazadas
+import com.sekaiforlyok.viewmodel.sinMundo
 import com.sekaiforlyok.viewmodel.mundosDePrueba
 import com.sekaiforlyok.viewmodel.padresPosibles
 import com.sekaiforlyok.viewmodel.personajesOrdenados
@@ -111,5 +114,37 @@ class ReglasMundoTest {
             val agua = alturas.count { it < 0.38f }.toFloat() / alturas.size
             assert(agua in 0.25f..0.8f) { "Semilla $semilla: $agua de agua" }
         }
+    }
+
+    @Test
+    fun losEnlacesEntreMundosSonSimetricosYSeLimpianAlBorrar() {
+        val mundos = listOf(Mundo("a", "A"), Mundo("b", "B"), Mundo("c", "C"))
+        // A se enlaza con B y C (y consigo mismo, que se ignora)
+        val enlazados = mundos.cambiarEnlaces("a", setOf("a", "b", "c"))
+        assertEquals(listOf("b", "c"), enlazados.first { it.id == "a" }.enlaces)
+        assertEquals(listOf("a"), enlazados.first { it.id == "b" }.enlaces)
+        assertEquals(listOf("a" to "b", "a" to "c"), enlazados.parejasEnlazadas())
+
+        // Quitar el enlace con C desde A también lo quita de C
+        val sinC = enlazados.cambiarEnlaces("a", setOf("b"))
+        assertEquals(emptyList(), sinC.first { it.id == "c" }.enlaces)
+
+        // Al borrar B, nadie sigue apuntando a él
+        assertEquals(listOf("c"), enlazados.sinMundo("b").first { it.id == "a" }.enlaces)
+    }
+
+    @Test
+    fun alBorrarUnLugarSusHijosPierdenLaPosicionEnSuImagen() {
+        val m = Mundo(
+            "m", "M",
+            lugares = listOf(
+                Lugar("reino", "Reino"),
+                Lugar("ciudad", "Ciudad", padreId = "reino"),
+                Lugar("plaza", "Plaza", padreId = "ciudad", xEnPadre = 0.5f, yEnPadre = 0.5f),
+            ),
+        )
+        val plaza = m.borrarLugar("ciudad").lugares.first { it.id == "plaza" }
+        assertEquals("reino", plaza.padreId)
+        assertNull(plaza.xEnPadre)
     }
 }

@@ -1,6 +1,7 @@
 package com.sekaiforlyok.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,6 +25,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -37,7 +39,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.sekaiforlyok.model.Apariencia
 import com.sekaiforlyok.model.Faccion
 import com.sekaiforlyok.model.Lugar
 import com.sekaiforlyok.model.Mundo
@@ -64,6 +69,33 @@ fun CirculoRango(rango: Rango) {
         Modifier.size(40.dp).clip(CircleShape).background(colorRango(rango)),
         contentAlignment = Alignment.Center,
     ) { Text(rango.name, color = Color.White, fontWeight = FontWeight.Bold) }
+}
+
+/**
+ * Foto del personaje: la cara de su personita con un borde del color de su rango y la letra del rango.
+ * Si no tiene personita, se ve el círculo del rango de siempre.
+ */
+@Composable
+fun AvatarPersonaje(p: Personaje, tamano: Dp) {
+    val apariencia = p.apariencia
+    if (apariencia == null) {
+        Box(Modifier.size(tamano).clip(CircleShape).background(colorRango(p.rango)), contentAlignment = Alignment.Center) {
+            Text(p.rango.name, color = Color.White, fontWeight = FontWeight.Bold)
+        }
+        return
+    }
+    Box(Modifier.size(tamano)) {
+        Chibi(
+            apariencia,
+            Modifier.fillMaxSize().clip(CircleShape).background(Color(0xFFE8E0F5)).border(3.dp, colorRango(p.rango), CircleShape),
+            soloCara = true,
+        )
+        // Letra del rango en una bolita abajo a la derecha
+        Box(
+            Modifier.align(Alignment.BottomEnd).size(tamano * 0.38f).clip(CircleShape).background(colorRango(p.rango)),
+            contentAlignment = Alignment.Center,
+        ) { Text(p.rango.name, color = Color.White, fontWeight = FontWeight.Bold, fontSize = (tamano.value * 0.2f).sp) }
+    }
 }
 
 /** Pestaña de personajes: lista ordenada de S a E y formulario para crear/editar. */
@@ -114,7 +146,7 @@ private fun FilaPersonaje(p: Personaje, faccion: Faccion?, alEditar: () -> Unit,
         Modifier.fillMaxWidth().clickable(onClick = alEditar).padding(start = 16.dp, top = 8.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        CirculoRango(p.rango)
+        AvatarPersonaje(p, 44.dp)
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             val edad = p.edad?.let { t.edadAnos(it) } ?: ""
@@ -195,6 +227,16 @@ private fun DialogoPersonaje(original: Personaje, mundo: Mundo, alGuardar: (Pers
         ) { p = p.copy(lugarId = it?.id) }
 
         OutlinedTextField(p.descripcion, { p = p.copy(descripcion = it) }, label = { Text(t.historia) }, minLines = 4, modifier = Modifier.fillMaxWidth())
+
+        // La personita chibi: se crea si se quiere; sin ella se ve el círculo del rango
+        Text(t.personita, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(top = 12.dp))
+        val apariencia = p.apariencia
+        if (apariencia == null) {
+            OutlinedButton(onClick = { p = p.copy(apariencia = Apariencia()) }) { Text(t.crearPersonita) }
+        } else {
+            EditorChibi(apariencia) { p = p.copy(apariencia = it) }
+            TextButton(onClick = { p = p.copy(apariencia = null) }) { Text(t.quitarPersonita, color = MaterialTheme.colorScheme.error) }
+        }
 
         // Relaciones de este personaje (solo lectura; se editan en la pestaña Relaciones)
         if (!esNuevo) {

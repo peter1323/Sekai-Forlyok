@@ -1,11 +1,15 @@
 package com.sekaiforlyok.viewmodel
 
+import com.sekaiforlyok.model.Accesorio
+import com.sekaiforlyok.model.Apariencia
 import com.sekaiforlyok.model.Faccion
 import com.sekaiforlyok.model.Lugar
 import com.sekaiforlyok.model.Mundo
+import com.sekaiforlyok.model.Peinado
 import com.sekaiforlyok.model.Personaje
 import com.sekaiforlyok.model.Rango
 import com.sekaiforlyok.model.Relacion
+import com.sekaiforlyok.model.Ropa
 import com.sekaiforlyok.model.TipoLugar
 import com.sekaiforlyok.model.TipoRelacion
 
@@ -13,7 +17,10 @@ import com.sekaiforlyok.model.TipoRelacion
 // Los ids de dentro de cada mundo son fijos y legibles ("jin", "cuervo"…): solo tienen que
 // ser únicos dentro del mismo mundo. El id del mundo sí es nuevo cada vez.
 
-fun mundosDePrueba(): List<Mundo> = listOf(reinoDeAethel(), torreInfinita())
+// Los dos mundos de ejemplo salen enlazados en la constelación
+fun mundosDePrueba(): List<Mundo> = listOf(reinoDeAethel(), torreInfinita()).let { (a, b) ->
+    listOf(a.copy(enlaces = listOf(b.id)), b.copy(enlaces = listOf(a.id)))
+}
 
 private fun reinoDeAethel() = Mundo(
     id = nuevoId(),
@@ -41,15 +48,20 @@ private fun reinoDeAethel() = Mundo(
     ),
     personajes = listOf(
         Personaje("jin", "Kang Jin-woo", 24, Rango.S, listOf("Sombras", "Teletransporte"), "cuervo", "seul",
-            "El cazador más débil del reino hasta que despertó en la Puerta Roja."),
+            "El cazador más débil del reino hasta que despertó en la Puerta Roja.",
+            apariencia = Apariencia(peinado = Peinado.PUNTAS, pelo = 0xFF1B1B1B, ojos = 0xFF5B3FA8, ropa = Ropa.CAPA, colorRopa = 0xFF1B1B1B)),
         Personaje("haeun", "Seo Ha-eun", 22, Rango.A, listOf("Luz sagrada", "Curación"), "alba", "seul",
-            "Sacerdotisa prodigio. Esconde que puede ver el futuro."),
+            "Sacerdotisa prodigio. Esconde que puede ver el futuro.",
+            apariencia = Apariencia(piel = 0xFFFCE4D6, peinado = Peinado.LARGO, pelo = 0xFFE8C872, ojos = 0xFF1565C0, ropa = Ropa.TUNICA, colorRopa = 0xFFF2F2F2, accesorio = Accesorio.CORONA)),
         Personaje("rhen", "Rhen", 30, Rango.B, listOf("Espada de viento"), null, "musgo",
-            "Espadachín sin gremio. Busca al monstruo que destruyó su aldea."),
+            "Espadachín sin gremio. Busca al monstruo que destruyó su aldea.",
+            apariencia = Apariencia(piel = 0xFFC68A5E, peinado = Peinado.COLETA, pelo = 0xFF4A3020, ojos = 0xFF2E7D32, ropa = Ropa.ARMADURA, colorRopa = 0xFF2E86DE, accesorio = Accesorio.CICATRIZ)),
         Personaje("mina", "Kang Mina", 17, Rango.C, listOf("Barrera"), "cuervo", "seul",
-            "Hermana pequeña de Jin-woo. Quiere ser cazadora como él."),
+            "Hermana pequeña de Jin-woo. Quiere ser cazadora como él.",
+            apariencia = Apariencia(peinado = Peinado.DOS_COLETAS, pelo = 0xFF1B1B1B, ojos = 0xFF5B3FA8, colorRopa = 0xFFE91E63)),
         Personaje("kael", "Kael", null, Rango.A, listOf("Fuego negro", "Invocación"), "carmesi", "abismo",
-            "Sumo sacerdote del Culto Carmesí. Nadie conoce su edad."),
+            "Sumo sacerdote del Culto Carmesí. Nadie conoce su edad.",
+            apariencia = Apariencia(piel = 0xFFE8B48F, peinado = Peinado.MELENA, pelo = 0xFFC0392B, ojos = 0xFFC62828, ropa = Ropa.TUNICA, colorRopa = 0xFF1B1B1B, accesorio = Accesorio.CUERNOS)),
         Personaje("tobi", "Tobi", 15, Rango.D, listOf("Sigilo"), null, "musgo",
             "Ladronzuelo que se cuela en las mazmorras para vender lo que encuentra."),
         Personaje("bo", "Aldeano Bo", 60, Rango.E, emptyList(), null, "musgo",

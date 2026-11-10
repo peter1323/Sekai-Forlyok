@@ -26,6 +26,7 @@ sealed class Pantalla {
     data object ListaMundos : Pantalla()
     data class DetalleMundo(val mundoId: String) : Pantalla()
     data object Ajustes : Pantalla()
+    data object Constelacion : Pantalla()
 }
 
 // Un único repositorio para toda la app. Se crea la primera vez que se usa.
@@ -55,17 +56,27 @@ fun App(alCambiarColores: (fondo: Color, texto: Color) -> Unit = { _, _ -> }) {
             // Se guarda como texto/booleano para que sobreviva al girar la pantalla
             var mundoAbierto by rememberSaveable { mutableStateOf<String?>(null) }
             var enAjustes by rememberSaveable { mutableStateOf(false) }
+            var enConstelacion by rememberSaveable { mutableStateOf(false) }
             val pantalla = when {
                 enAjustes -> Pantalla.Ajustes
                 mundoAbierto != null -> Pantalla.DetalleMundo(mundoAbierto!!)
+                enConstelacion -> Pantalla.Constelacion
                 else -> Pantalla.ListaMundos
             }
+            val mundosVm = viewModel { MundosViewModel(repositorio) }
 
             when (pantalla) {
                 Pantalla.ListaMundos -> PantallaMundos(
-                    vm = viewModel { MundosViewModel(repositorio) },
+                    vm = mundosVm,
                     alAbrirMundo = { mundoAbierto = it },
                     alAbrirAjustes = { enAjustes = true },
+                    alAbrirConstelacion = { enConstelacion = true },
+                )
+                // Al volver de un mundo abierto desde aquí, se vuelve a la constelación
+                Pantalla.Constelacion -> PantallaConstelacion(
+                    vm = mundosVm,
+                    alVolver = { enConstelacion = false },
+                    alAbrirMundo = { mundoAbierto = it },
                 )
                 is Pantalla.DetalleMundo -> PantallaMundo(
                     // "key" hace que cada mundo tenga su propio ViewModel

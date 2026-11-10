@@ -90,7 +90,33 @@ fun Mundo.borrarLugar(id: String): Mundo {
     val borrado = lugares.find { it.id == id } ?: return this
     return copy(
         lugares = lugares.filter { it.id != id }
-            .map { if (it.padreId == id) it.copy(padreId = borrado.padreId) else it },
+            // Su posición dentro de la imagen del lugar borrado ya no sirve
+            .map { if (it.padreId == id) it.copy(padreId = borrado.padreId, xEnPadre = null, yEnPadre = null) else it },
         personajes = personajes.map { if (it.lugarId == id) it.copy(lugarId = null) else it },
     )
+}
+
+// ---------- Enlaces entre mundos (constelación) ----------
+// Un enlace es una línea entre dos mundos. Se guarda en los dos para que siempre sea simétrico.
+
+/** Deja el mundo [id] enlazado exactamente con [otros] (y actualiza también a los demás mundos). */
+fun List<Mundo>.cambiarEnlaces(id: String, otros: Set<String>): List<Mundo> {
+    val validos = otros - id // Un mundo no se enlaza consigo mismo
+    return map { m ->
+        when {
+            m.id == id -> m.copy(enlaces = validos.filter { o -> any { it.id == o } })
+            m.id in validos -> if (id in m.enlaces) m else m.copy(enlaces = m.enlaces + id)
+            else -> m.copy(enlaces = m.enlaces - id)
+        }
+    }
+}
+
+/** Quita un mundo de la lista y también los enlaces que apuntaban a él. */
+fun List<Mundo>.sinMundo(id: String): List<Mundo> =
+    filter { it.id != id }.map { if (id in it.enlaces) it.copy(enlaces = it.enlaces - id) else it }
+
+/** Parejas de mundos enlazados, cada una una sola vez (para dibujar las líneas). */
+fun List<Mundo>.parejasEnlazadas(): List<Pair<String, String>> {
+    val ids = map { it.id }.toSet()
+    return flatMap { m -> m.enlaces.filter { it in ids && m.id < it }.map { m.id to it } }
 }

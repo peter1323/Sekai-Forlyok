@@ -11,7 +11,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.Castle
+import androidx.compose.material.icons.filled.Image
+import androidx.compose.material3.IconButton
 import androidx.compose.material.icons.filled.Cottage
 import androidx.compose.material.icons.filled.LocationCity
 import androidx.compose.material.icons.filled.Place
@@ -63,6 +66,14 @@ fun PestanaLugares(mundo: Mundo, vm: MundoViewModel) {
     val t = LocalTextos.current
     var editando by remember { mutableStateOf<Lugar?>(null) }
     var borrando by remember { mutableStateOf<Lugar?>(null) }
+    var conImagen by remember { mutableStateOf<String?>(null) } // Lugar cuya imagen se está viendo
+
+    // Al abrir la imagen de un lugar, ocupa toda la pestaña hasta pulsar "volver"
+    val abierto = mundo.lugares.find { it.id == conImagen }
+    if (abierto != null) {
+        ImagenLugar(abierto, mundo, vm, alVolver = { conImagen = null })
+        return
+    }
 
     ConBotonAnadir(t.anadirLugar, alPulsar = { editando = Lugar(id = nuevoId(), nombre = "") }) {
         if (mundo.lugares.isEmpty()) ListaVacia(t.sinLugares)
@@ -79,6 +90,16 @@ fun PestanaLugares(mundo: Mundo, vm: MundoViewModel) {
                     Column(Modifier.weight(1f)) {
                         Text(lugar.nombre, style = MaterialTheme.typography.titleMedium, color = colorNivel(nivel))
                         Text(t.tiposLugar.getValue(lugar.tipo), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    // Imagen propia del lugar (los continentes ya tienen el mapa del mundo)
+                    if (lugar.tipo != TipoLugar.CONTINENTE) {
+                        IconButton(onClick = { conImagen = lugar.id }) {
+                            Icon(
+                                if (lugar.rutaImagen != null) Icons.Default.Image else Icons.Default.AddPhotoAlternate,
+                                contentDescription = t.imagenDelLugar,
+                                tint = if (lugar.rutaImagen != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                     }
                     BotonesEditarBorrar(alEditar = { editando = lugar }, alBorrar = { borrando = lugar })
                 }

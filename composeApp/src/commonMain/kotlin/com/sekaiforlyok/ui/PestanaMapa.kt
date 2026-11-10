@@ -117,12 +117,12 @@ fun PestanaMapa(mundo: Mundo, vm: MundoViewModel) {
             )
             VisorMapa(
                 imagen = imagen,
-                lugares = mundo.lugares.filter { it.x != null && it.y != null },
+                pines = mundo.lugares.filter { it.x != null && it.y != null }.map { PinMapa(it.id, it.nombre, it.x!!, it.y!!) },
                 escala = escala,
                 desplazamiento = desplazamiento,
                 alMover = { nuevaEscala, nuevoDesplazamiento -> escala = nuevaEscala; desplazamiento = nuevoDesplazamiento },
                 alTocarMapa = { puntoElegido = it },
-                alTocarPin = { lugarVisto = it },
+                alTocarPin = { pin -> lugarVisto = mundo.lugares.find { it.id == pin.id } },
             )
         }
     }
@@ -205,19 +205,22 @@ private fun TextoRecomendaciones() {
     )
 }
 
+/** Un pin sobre una imagen: un lugar o un punto libre. x e y van de 0 a 1. */
+data class PinMapa(val id: String, val nombre: String, val x: Float, val y: Float, val color: Color = Color(0xFFE53935))
+
 /**
- * Muestra el mapa manteniendo su proporción, con zoom y desplazamiento, y dibuja los pines.
+ * Muestra el mapa (o la imagen de un lugar) manteniendo su proporción, con zoom y desplazamiento, y dibuja los pines.
  * Los pines van dentro de la misma capa que la imagen, así se mueven y escalan con ella.
  */
 @Composable
-private fun VisorMapa(
+fun VisorMapa(
     imagen: ImageBitmap,
-    lugares: List<Lugar>,
+    pines: List<PinMapa>,
     escala: Float,
     desplazamiento: Offset,
     alMover: (Float, Offset) -> Unit,
     alTocarMapa: (Offset) -> Unit,
-    alTocarPin: (Lugar) -> Unit,
+    alTocarPin: (PinMapa) -> Unit,
 ) {
     // Los gestos se quedan escuchando todo el rato; así siempre leen el zoom y la posición actuales
     val escalaActual by rememberUpdatedState(escala)
@@ -261,14 +264,14 @@ private fun VisorMapa(
             Image(imagen, contentDescription = LocalTextos.current.mapa, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.FillBounds)
             val anchoPx = constraints.maxWidth
             val altoPx = constraints.maxHeight
-            lugares.forEach { lugar -> Pin(lugar, lugar.x!! * anchoPx, lugar.y!! * altoPx, escala) { alTocarPin(lugar) } }
+            pines.forEach { pin -> Pin(pin, pin.x * anchoPx, pin.y * altoPx, escala) { alTocarPin(pin) } }
         }
     }
 }
 
 /** Pin rojo con el nombre encima. La punta del pin queda justo en (x, y). */
 @Composable
-private fun Pin(lugar: Lugar, x: Float, y: Float, escala: Float, alPulsar: () -> Unit) {
+private fun Pin(pin: PinMapa, x: Float, y: Float, escala: Float, alPulsar: () -> Unit) {
     val ancho = 140.dp
     val alto = 46.dp
     Box(
@@ -284,7 +287,7 @@ private fun Pin(lugar: Lugar, x: Float, y: Float, escala: Float, alPulsar: () ->
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable(onClick = alPulsar)) {
             Text(
-                lugar.nombre,
+                pin.nombre,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White,
@@ -292,7 +295,7 @@ private fun Pin(lugar: Lugar, x: Float, y: Float, escala: Float, alPulsar: () ->
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.background(Color(0xAA000000), RoundedCornerShape(4.dp)).padding(horizontal = 4.dp),
             )
-            Icon(Icons.Default.LocationOn, contentDescription = lugar.nombre, tint = Color(0xFFE53935), modifier = Modifier.size(28.dp))
+            Icon(Icons.Default.LocationOn, contentDescription = pin.nombre, tint = pin.color, modifier = Modifier.size(28.dp))
         }
     }
 }
