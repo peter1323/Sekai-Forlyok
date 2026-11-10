@@ -7,6 +7,7 @@ import com.sekaiforlyok.model.Mundo
 import com.sekaiforlyok.model.Personaje
 import com.sekaiforlyok.model.Rango
 import com.sekaiforlyok.model.Relacion
+import com.sekaiforlyok.model.TipoRelacionFaccion
 import com.sekaiforlyok.ui.distanciaASegmento
 import com.sekaiforlyok.viewmodel.alturaTerreno
 import com.sekaiforlyok.viewmodel.arbolLugares
@@ -19,6 +20,8 @@ import com.sekaiforlyok.viewmodel.sinMundo
 import com.sekaiforlyok.viewmodel.mundosDePrueba
 import com.sekaiforlyok.viewmodel.padresPosibles
 import com.sekaiforlyok.viewmodel.personajesOrdenados
+import com.sekaiforlyok.viewmodel.ponerMiembros
+import com.sekaiforlyok.viewmodel.relacionarFacciones
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -156,5 +159,32 @@ class ReglasMundoTest {
         val b = Offset(10f, 0f)
         assertEquals(3f, distanciaASegmento(Offset(5f, 3f), a, b))   // Encima del medio
         assertEquals(5f, distanciaASegmento(Offset(13f, 4f), a, b))  // Más allá del extremo b
+    }
+
+    @Test
+    fun alElegirMiembrosDeUnaFaccionSeMuevenOSeQuedanSinFaccion() {
+        val m = Mundo(
+            "m", "M",
+            facciones = listOf(Faccion("f1", "Uno"), Faccion("f2", "Dos")),
+            personajes = listOf(
+                Personaje("a", "A", faccionId = "f1"), // Se desmarca: queda sin facción
+                Personaje("b", "B", faccionId = "f2"), // Se marca: pasa de Dos a Uno
+                Personaje("c", "C", faccionId = "f2"), // No se toca
+            ),
+        )
+        val r = m.ponerMiembros("f1", setOf("b")).personajes.associate { it.id to it.faccionId }
+        assertEquals(mapOf("a" to null, "b" to "f1", "c" to "f2"), r)
+    }
+
+    @Test
+    fun entreDosFaccionesSoloHayUnaRelacionYSeBorraConEllas() {
+        val m = Mundo("m", "M", facciones = listOf(Faccion("a", "A"), Faccion("b", "B"), Faccion("c", "C")))
+            .relacionarFacciones("a", "b", TipoRelacionFaccion.ALIADAS)
+            .relacionarFacciones("b", "a", TipoRelacionFaccion.ENEMIGAS) // Cambia la de antes, no añade otra
+            .relacionarFacciones("a", "a", TipoRelacionFaccion.ALIADAS)  // Consigo misma: se ignora
+            .relacionarFacciones("b", "c", TipoRelacionFaccion.NEUTRALES)
+        assertEquals(listOf(TipoRelacionFaccion.ENEMIGAS, TipoRelacionFaccion.NEUTRALES), m.relacionesFacciones.map { it.tipo })
+        // Al borrar B desaparecen sus dos relaciones
+        assertEquals(emptyList(), m.borrarFaccion("b").relacionesFacciones)
     }
 }

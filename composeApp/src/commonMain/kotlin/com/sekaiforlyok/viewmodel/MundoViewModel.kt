@@ -11,6 +11,7 @@ import com.sekaiforlyok.model.Mundo
 import com.sekaiforlyok.model.Personaje
 import com.sekaiforlyok.model.Punto
 import com.sekaiforlyok.model.Relacion
+import com.sekaiforlyok.model.TipoRelacionFaccion
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.extension
 import io.github.vinceglb.filekit.readBytes
@@ -53,11 +54,25 @@ class MundoViewModel(private val repo: Repositorio, private val mundoId: String)
 
     // ---------- FACCIONES ----------
 
-    fun guardarFaccion(f: Faccion) = cambiar { m ->
+    /** Guarda una facción y deja como miembros exactamente a los personajes de [miembros]. */
+    fun guardarFaccion(f: Faccion, miembros: Set<String>) = cambiar { m ->
         m.copy(facciones = m.facciones.reemplazarOAnadir(f.copy(nombre = f.nombre.trim())) { it.id })
+            .ponerMiembros(f.id, miembros)
     }
 
     fun borrarFaccion(id: String) = cambiar { it.borrarFaccion(id) }
+
+    /** Une dos facciones en la constelación como aliadas, neutrales o enemigas. */
+    fun relacionarFacciones(a: String, b: String, tipo: TipoRelacionFaccion) = cambiar { it.relacionarFacciones(a, b, tipo) }
+
+    fun borrarRelacionFaccion(id: String) = cambiar { m ->
+        m.copy(relacionesFacciones = m.relacionesFacciones.filter { it.id != id })
+    }
+
+    /** Guarda dónde se ha dejado una facción al arrastrarla en su constelación. */
+    fun moverFaccion(id: String, x: Float, y: Float) = cambiar { m ->
+        m.copy(facciones = m.facciones.map { if (it.id == id) it.copy(posX = x, posY = y) else it })
+    }
 
     // ---------- LUGARES ----------
 

@@ -20,6 +20,7 @@ data class Mundo(
     val relaciones: List<Relacion> = emptyList(),
     val enlaces: List<String> = emptyList(), // Ids de los mundos conectados con este (líneas de la constelación)
     val posX: Float? = null,          // Posición en la constelación: de 0 a 1 a lo ancho (null = automática)
+    val relacionesFacciones: List<RelacionFaccion> = emptyList(), // Alianzas y enemistades entre facciones
     val posY: Float? = null,          // Posición en la constelación: dp desde arriba
 )
 
@@ -46,6 +47,19 @@ data class Faccion(
     val id: String,
     val nombre: String,
     val descripcion: String = "",
+    val posX: Float? = null,          // Posición en la constelación de facciones (igual que en Mundo)
+    val posY: Float? = null,
+)
+
+/** Cómo se llevan dos facciones. El texto que se ve en pantalla está en ui/Textos.kt. */
+enum class TipoRelacionFaccion { ALIADAS, NEUTRALES, ENEMIGAS }
+
+@Serializable
+data class RelacionFaccion(
+    val id: String,
+    val faccion1Id: String,
+    val faccion2Id: String,
+    val tipo: TipoRelacionFaccion = TipoRelacionFaccion.NEUTRALES,
 )
 
 /** Tipos de lugar. El texto que se ve en pantalla está en ui/Textos.kt (según el idioma). */

@@ -3,6 +3,8 @@ package com.sekaiforlyok.viewmodel
 import com.sekaiforlyok.model.Lugar
 import com.sekaiforlyok.model.Mundo
 import com.sekaiforlyok.model.Personaje
+import com.sekaiforlyok.model.RelacionFaccion
+import com.sekaiforlyok.model.TipoRelacionFaccion
 import kotlin.random.Random
 
 // Reglas del mundo escritas como funciones "puras": reciben un Mundo y devuelven otro nuevo,
@@ -76,9 +78,10 @@ fun Mundo.borrarPersonaje(id: String): Mundo = copy(
     relaciones = relaciones.filter { it.personaje1Id != id && it.personaje2Id != id },
 )
 
-/** Borra una facción; sus miembros se quedan sin facción. */
+/** Borra una facción; sus miembros se quedan sin facción y se borran sus alianzas y enemistades. */
 fun Mundo.borrarFaccion(id: String): Mundo = copy(
     facciones = facciones.filter { it.id != id },
+    relacionesFacciones = relacionesFacciones.filter { it.faccion1Id != id && it.faccion2Id != id },
     personajes = personajes.map { if (it.faccionId == id) it.copy(faccionId = null) else it },
 )
 
@@ -119,4 +122,25 @@ fun List<Mundo>.sinMundo(id: String): List<Mundo> =
 fun List<Mundo>.parejasEnlazadas(): List<Pair<String, String>> {
     val ids = map { it.id }.toSet()
     return flatMap { m -> m.enlaces.filter { it in ids && m.id < it }.map { m.id to it } }
+}
+
+/**
+ * Deja en la facción [faccionId] solo a los personajes de [miembros].
+ * Los marcados que estaban en otra facción se cambian a esta; los desmarcados se quedan sin facción.
+ */
+fun Mundo.ponerMiembros(faccionId: String, miembros: Set<String>): Mundo = copy(
+    personajes = personajes.map {
+        when {
+            it.id in miembros -> it.copy(faccionId = faccionId)
+            it.faccionId == faccionId -> it.copy(faccionId = null)
+            else -> it
+        }
+    },
+)
+
+/** Pone cómo se llevan dos facciones. Si ya tenían una relación, se cambia (nunca hay dos entre las mismas). */
+fun Mundo.relacionarFacciones(a: String, b: String, tipo: TipoRelacionFaccion): Mundo {
+    if (a == b) return this
+    val otras = relacionesFacciones.filterNot { setOf(it.faccion1Id, it.faccion2Id) == setOf(a, b) }
+    return copy(relacionesFacciones = otras + RelacionFaccion(nuevoId(), a, b, tipo))
 }

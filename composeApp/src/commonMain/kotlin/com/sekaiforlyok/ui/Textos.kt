@@ -7,6 +7,7 @@ import com.sekaiforlyok.model.Peinado
 import com.sekaiforlyok.model.Ropa
 import com.sekaiforlyok.model.TipoLugar
 import com.sekaiforlyok.model.TipoRelacion
+import com.sekaiforlyok.model.TipoRelacionFaccion
 
 // Todos los textos de la app en español e inglés.
 // Las pantallas los leen con: val t = LocalTextos.current  y luego  t.guardar, t.mundos…
@@ -159,6 +160,13 @@ class Textos(
     val tocaUnaLinea: String,
     val exportar: String,
     val exportarExplicacion: String,
+    val ahoraEn: (String) -> String,
+    val si: String,
+    val no: String,
+    val moverTitulo: String,
+    val moverDeFaccion: (personaje: String, de: String, a: String) -> String,
+    val comoSeLlevan: String,
+    val tiposRelacionFaccion: Map<TipoRelacionFaccion, String>,
 )
 
 val ESPANOL = Textos(
@@ -320,6 +328,17 @@ val ESPANOL = Textos(
     tocaUnaLinea = "Toca la línea que quieres borrar.",
     exportar = "Exportar imagen",
     exportarExplicacion = "Se guarda la imagen con sus pines y nombres. ¿En qué formato?",
+    ahoraEn = { "Ahora en $it" },
+    si = "Sí",
+    no = "No",
+    moverTitulo = "¿Cambiar de facción?",
+    moverDeFaccion = { p, de, a -> "$p está en $de. ¿Quieres moverlo de $de a $a?" },
+    comoSeLlevan = "¿Cómo se llevan estas dos facciones?",
+    tiposRelacionFaccion = mapOf(
+        TipoRelacionFaccion.ALIADAS to "Aliadas",
+        TipoRelacionFaccion.NEUTRALES to "Neutrales",
+        TipoRelacionFaccion.ENEMIGAS to "Enemigas",
+    ),
 )
 
 val INGLES = Textos(
@@ -481,6 +500,17 @@ val INGLES = Textos(
     tocaUnaLinea = "Tap the line you want to delete.",
     exportar = "Export image",
     exportarExplicacion = "The image is saved with its pins and names. Which format?",
+    ahoraEn = { "Now in $it" },
+    si = "Yes",
+    no = "No",
+    moverTitulo = "Change faction?",
+    moverDeFaccion = { p, de, a -> "$p is in $de. Do you want to move them from $de to $a?" },
+    comoSeLlevan = "How do these two factions get along?",
+    tiposRelacionFaccion = mapOf(
+        TipoRelacionFaccion.ALIADAS to "Allies",
+        TipoRelacionFaccion.NEUTRALES to "Neutral",
+        TipoRelacionFaccion.ENEMIGAS to "Enemies",
+    ),
 )
 
 fun textosDe(idioma: Idioma): Textos = when (idioma) {
