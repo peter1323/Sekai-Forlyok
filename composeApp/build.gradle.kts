@@ -60,7 +60,7 @@ compose.desktop {
             // no arranca en Windows con la accesibilidad de Java activada ("Failed to launch JVM").
             modules("jdk.accessibility", "jdk.unsupported")
             packageName = "SekaiForlyok"
-            packageVersion = "1.0.0"
+            packageVersion = "1.1.0"
             description = "Creador de personajes y mundos al estilo manhwa"
             windows {
                 // Icono de la brújula para el .exe, el acceso directo y el instalador
