@@ -19,16 +19,21 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CenterFocusStrong
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.Terrain
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -44,7 +49,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
@@ -61,6 +66,7 @@ import androidx.compose.ui.unit.sp
 import com.sekaiforlyok.model.Lugar
 import com.sekaiforlyok.model.Mundo
 import com.sekaiforlyok.viewmodel.MundoViewModel
+import com.sekaiforlyok.viewmodel.arbolLugares
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import kotlin.math.roundToInt
@@ -91,6 +97,8 @@ fun PestanaMapa(mundo: Mundo, vm: MundoViewModel) {
         if (imagen == null) {
             // Sin mapa todavía: explicamos las opciones
             Column(Modifier.verticalScroll(rememberScrollState()).padding(16.dp)) {
+                Icon(Icons.Default.Map, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(56.dp).align(Alignment.CenterHorizontally))
+                Spacer(Modifier.height(12.dp))
                 Card { Column(Modifier.padding(16.dp)) { TextoRecomendaciones() } }
                 Spacer(Modifier.height(16.dp))
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -102,21 +110,33 @@ fun PestanaMapa(mundo: Mundo, vm: MundoViewModel) {
             // Barra de botones encima del mapa
             var escala by remember { mutableFloatStateOf(1f) }
             var desplazamiento by remember { mutableStateOf(Offset.Zero) }
-            val pines = mundo.lugares.filter { it.x != null && it.y != null }.map { PinMapa(it.id, it.nombre, it.x!!, it.y!!) }
-            FlowRow(Modifier.padding(horizontal = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = { selector.launch() }) { Text(t.cambiarImagen) }
-                OutlinedButton(onClick = generar) { Text(t.generarTerreno) }
+            // Cada pin lleva el color del nivel de su lugar, igual que en la pestaña Lugares
+            val niveles = mundo.arbolLugares().associate { (l, nivel) -> l.id to nivel }
+            val colocados = mundo.lugares.filter { it.x != null && it.y != null }
+            val pines = colocados.map { PinMapa(it.id, it.nombre, it.x!!, it.y!!, colorNivel(niveles[it.id] ?: 0)) }
+            FlowRow(
+                Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.Center,
+            ) {
+                FilledTonalButton(onClick = { selector.launch() }) {
+                    Icon(Icons.Default.Image, null, Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text(t.cambiarImagen)
+                }
+                FilledTonalButton(onClick = generar) {
+                    Icon(Icons.Default.Terrain, null, Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text(t.generarTerreno)
+                }
                 IconButton(onClick = { escala = 1f; desplazamiento = Offset.Zero }) {
                     Icon(Icons.Default.CenterFocusStrong, t.centrarMapa)
                 }
                 IconButton(onClick = { verAyuda = true }) { Icon(Icons.Default.Info, t.ayuda) }
                 BotonExportar(imagen, pines, mundo.nombre)
             }
-            Text(
-                t.ayudaMapa,
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(horizontal = 12.dp),
-            )
+            // Cuántos lugares hay en el mapa y cuántos faltan por colocar
+            FlowRow(Modifier.padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Etiqueta(t.enElMapa(colocados.size), MaterialTheme.colorScheme.primary)
+                val faltan = mundo.lugares.size - colocados.size
+                if (faltan > 0) Etiqueta(t.sinColocar(faltan), MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Text(t.ayudaMapa, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp))
             VisorMapa(
                 imagen = imagen,
                 pines = pines,
@@ -228,7 +248,7 @@ fun VisorMapa(
     val escalaActual by rememberUpdatedState(escala)
     val desplazamientoActual by rememberUpdatedState(desplazamiento)
     Box(
-        Modifier.fillMaxSize().padding(8.dp).clipToBounds()
+        Modifier.fillMaxSize().padding(12.dp).clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surfaceVariant)
             // Pellizcar para hacer zoom y arrastrar para mover (dedos o ratón)
             .pointerInput(Unit) {
                 detectTransformGestures { _, mover, zoom, _ ->

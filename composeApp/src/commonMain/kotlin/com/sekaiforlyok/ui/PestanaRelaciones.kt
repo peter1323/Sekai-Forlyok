@@ -1,5 +1,7 @@
 package com.sekaiforlyok.ui
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -11,13 +13,16 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -31,8 +36,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.sekaiforlyok.model.Mundo
+import com.sekaiforlyok.model.Personaje
 import com.sekaiforlyok.model.Relacion
 import com.sekaiforlyok.model.TipoRelacion
 import com.sekaiforlyok.viewmodel.MundoViewModel
@@ -104,20 +114,9 @@ fun PestanaRelaciones(mundo: Mundo, vm: MundoViewModel) {
             return@Column
         }
         if (mundo.relaciones.isEmpty()) ListaVacia(t.sinRelaciones)
-        LazyColumn(contentPadding = PaddingValues(bottom = 88.dp)) {
+        LazyColumn(contentPadding = PaddingValues(12.dp, 12.dp, 12.dp, 88.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             items(mundo.relaciones, key = { it.id }) { r ->
-                Row(
-                    Modifier.fillMaxWidth().clickable { editando = r }.padding(start = 16.dp, top = 8.dp, bottom = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(Modifier.weight(1f)) {
-                        Text("${nombre(r.personaje1Id)}  ↔  ${nombre(r.personaje2Id)}", style = MaterialTheme.typography.titleMedium)
-                        Etiqueta(t.tiposRelacion.getValue(r.tipo), colorRelacion(r.tipo))
-                        if (r.nota.isNotBlank()) Text(r.nota, style = MaterialTheme.typography.bodySmall)
-                    }
-                    BotonesEditarBorrar(alEditar = { editando = r }, alBorrar = { borrando = r })
-                }
-                HorizontalDivider()
+                TarjetaRelacion(r, mundo, alEditar = { editando = r }, alBorrar = { borrando = r })
             }
         }
       }
@@ -219,5 +218,51 @@ private fun ConstelacionRelaciones(
             val aro = if (nodo.id == seleccionado) Modifier.border(4.dp, Color.White, CircleShape).padding(4.dp) else Modifier
             Box(aro) { AvatarPersonaje(it, 72.dp) }
         }
+    }
+}
+
+/** Tarjeta de una relación: los dos personajes a los lados y en medio una línea del color del tipo. */
+@Composable
+private fun TarjetaRelacion(r: Relacion, mundo: Mundo, alEditar: () -> Unit, alBorrar: () -> Unit) {
+    val t = LocalTextos.current
+    val color = colorRelacion(r.tipo)
+    Card(
+        onClick = alEditar,
+        colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.10f)),
+        border = BorderStroke(1.dp, color.copy(alpha = 0.45f)),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Row(Modifier.padding(start = 12.dp, top = 10.dp, bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    LadoRelacion(mundo.personajes.find { it.id == r.personaje1Id }, Modifier.weight(1f))
+                    // Línea de color con el tipo encima
+                    Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(t.tiposRelacion.getValue(r.tipo), color = color, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
+                        Box(Modifier.padding(top = 4.dp).fillMaxWidth().height(4.dp).background(color, RoundedCornerShape(2.dp)))
+                    }
+                    LadoRelacion(mundo.personajes.find { it.id == r.personaje2Id }, Modifier.weight(1f))
+                }
+                if (r.nota.isNotBlank()) {
+                    Text(
+                        "“${r.nota}”", style = MaterialTheme.typography.bodyMedium, fontStyle = FontStyle.Italic,
+                        textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    )
+                }
+            }
+            BotonesEditarBorrar(alEditar, alBorrar)
+        }
+    }
+}
+
+/** Un personaje de la relación: su cara y su nombre debajo. */
+@Composable
+private fun LadoRelacion(p: Personaje?, modifier: Modifier) {
+    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        if (p != null) AvatarPersonaje(p, 52.dp)
+        Text(
+            p?.nombre ?: "?", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.dp),
+        )
     }
 }

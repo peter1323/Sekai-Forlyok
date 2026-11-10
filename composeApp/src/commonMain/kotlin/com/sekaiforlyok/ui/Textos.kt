@@ -178,6 +178,9 @@ class Textos(
     val sexos: Map<Sexo, String>,
     val orejas: String,
     val tiposOrejas: Map<Orejas, String>,
+    val enElMapa: (Int) -> String,
+    val sinColocar: (Int) -> String,
+    val puntosLibresN: (Int) -> String,
 )
 
 val ESPANOL = Textos(
@@ -359,6 +362,9 @@ val ESPANOL = Textos(
     sexos = mapOf(Sexo.HOMBRE to "Hombre", Sexo.MUJER to "Mujer", Sexo.SIN_SEXO to "Sin sexo (unisex)"),
     orejas = "Orejas",
     tiposOrejas = mapOf(Orejas.HUMANAS to "Humanas", Orejas.PUNTIAGUDAS to "Puntiagudas (elfo, duende)", Orejas.GATO to "De gato", Orejas.CONEJO to "De conejo"),
+    enElMapa = { if (it == 1) "1 lugar en el mapa" else "$it lugares en el mapa" },
+    sinColocar = { "$it sin colocar" },
+    puntosLibresN = { if (it == 1) "1 punto libre" else "$it puntos libres" },
 )
 
 val INGLES = Textos(
@@ -540,6 +546,9 @@ val INGLES = Textos(
     sexos = mapOf(Sexo.HOMBRE to "Male", Sexo.MUJER to "Female", Sexo.SIN_SEXO to "Sexless (unisex)"),
     orejas = "Ears",
     tiposOrejas = mapOf(Orejas.HUMANAS to "Human", Orejas.PUNTIAGUDAS to "Pointed (elf, goblin)", Orejas.GATO to "Cat", Orejas.CONEJO to "Rabbit"),
+    enElMapa = { if (it == 1) "1 place on the map" else "$it places on the map" },
+    sinColocar = { "$it not placed" },
+    puntosLibresN = { if (it == 1) "1 free point" else "$it free points" },
 )
 
 fun textosDe(idioma: Idioma): Textos = when (idioma) {

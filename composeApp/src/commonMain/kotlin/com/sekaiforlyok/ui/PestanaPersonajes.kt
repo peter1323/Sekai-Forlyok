@@ -1,5 +1,6 @@
 package com.sekaiforlyok.ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -19,9 +20,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.MaterialTheme
@@ -108,15 +111,15 @@ fun PestanaPersonajes(mundo: Mundo, vm: MundoViewModel) {
 
     ConBotonAnadir(t.anadirPersonaje, alPulsar = { editando = Personaje(id = nuevoId(), nombre = "") }) {
         if (mundo.personajes.isEmpty()) ListaVacia(t.sinPersonajes)
-        LazyColumn(contentPadding = PaddingValues(bottom = 88.dp)) {
+        LazyColumn(contentPadding = PaddingValues(12.dp, 12.dp, 12.dp, 88.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             items(mundo.personajesOrdenados(), key = { it.id }) { p ->
-                FilaPersonaje(
+                TarjetaPersonaje(
                     p = p,
                     faccion = mundo.facciones.find { it.id == p.faccionId },
+                    lugar = mundo.lugares.find { it.id == p.lugarId },
                     alEditar = { editando = p },
                     alBorrar = { borrando = p },
                 )
-                HorizontalDivider()
             }
         }
     }
@@ -139,33 +142,43 @@ fun PestanaPersonajes(mundo: Mundo, vm: MundoViewModel) {
     }
 }
 
+/**
+ * Tarjeta de un personaje en el color de su rango: su personita de cuerpo entero (o su rango),
+ * nombre y edad, facción, raza, sexo, lugar de origen y poderes.
+ */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun FilaPersonaje(p: Personaje, faccion: Faccion?, alEditar: () -> Unit, alBorrar: () -> Unit) {
+private fun TarjetaPersonaje(p: Personaje, faccion: Faccion?, lugar: Lugar?, alEditar: () -> Unit, alBorrar: () -> Unit) {
     val t = LocalTextos.current
-    Row(
-        Modifier.fillMaxWidth().clickable(onClick = alEditar).padding(start = 16.dp, top = 8.dp, bottom = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
+    val color = colorRango(p.rango)
+    Card(
+        onClick = alEditar,
+        colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.10f)),
+        border = BorderStroke(1.dp, color.copy(alpha = 0.45f)),
+        modifier = Modifier.fillMaxWidth(),
     ) {
-        AvatarPersonaje(p, 44.dp)
-        Spacer(Modifier.width(12.dp))
-        Column(Modifier.weight(1f)) {
-            val edad = p.edad?.let { t.edadAnos(it) } ?: ""
-            Text(p.nombre + edad, style = MaterialTheme.typography.titleMedium)
-            // Facción · raza · sexo (lo que esté puesto)
-            Text(
-                listOfNotNull(faccion?.nombre ?: t.sinFaccion, p.raza.trim().ifBlank { null }, p.sexo?.let(t.sexos::getValue)).joinToString(" · "),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            // Poderes como pequeñas etiquetas
-            if (p.poderes.isNotEmpty()) {
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    p.poderes.forEach { Etiqueta(it, MaterialTheme.colorScheme.primary) }
+        Row(Modifier.padding(start = 12.dp, top = 10.dp, bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+            val apariencia = p.apariencia
+            if (apariencia != null) {
+                Chibi(apariencia, Modifier.size(60.dp, 84.dp).clip(RoundedCornerShape(10.dp)).background(color.copy(alpha = 0.18f)).padding(4.dp))
+            } else {
+                AvatarPersonaje(p, 56.dp)
+            }
+            Spacer(Modifier.width(14.dp))
+            Column(Modifier.weight(1f)) {
+                Text(p.nombre + (p.edad?.let { t.edadAnos(it) } ?: ""), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = color)
+                // Raza y sexo, si están puestos
+                val datos = listOfNotNull(p.raza.ifBlank { null }, p.sexo?.let(t.sexos::getValue))
+                if (datos.isNotEmpty()) Text(datos.joinToString(" · "), style = MaterialTheme.typography.bodySmall)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Etiqueta("${t.rango} ${p.rango.name}", color)
+                    Etiqueta(faccion?.nombre ?: t.sinFaccion, MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (lugar != null) Etiqueta("📍 " + lugar.nombre, MaterialTheme.colorScheme.onSurfaceVariant)
+                    p.poderes.forEach { Etiqueta("✦ $it", MaterialTheme.colorScheme.primary) }
                 }
             }
+            BotonesEditarBorrar(alEditar, alBorrar)
         }
-        BotonesEditarBorrar(alEditar, alBorrar)
     }
 }
 

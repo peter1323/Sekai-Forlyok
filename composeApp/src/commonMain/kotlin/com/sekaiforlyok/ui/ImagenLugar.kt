@@ -8,19 +8,27 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CenterFocusStrong
+import androidx.compose.material.icons.filled.HideImage
+import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -71,7 +79,10 @@ fun ImagenLugar(lugar: Lugar, mundo: Mundo, vm: MundoViewModel, alVolver: () -> 
         }
         if (imagen == null) {
             Column(Modifier.padding(16.dp)) {
-                Text(t.imagenLugarExplicacion)
+                // Igual que el Mapa sin imagen: icono grande y la explicación en una tarjeta
+                Icon(Icons.Default.Map, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(56.dp).align(Alignment.CenterHorizontally))
+                Spacer(Modifier.height(12.dp))
+                Card(Modifier.fillMaxWidth()) { Text(t.imagenLugarExplicacion, Modifier.padding(16.dp)) }
                 Button(onClick = { selector.launch() }, modifier = Modifier.padding(top = 16.dp)) { Text(t.anadirImagen) }
             }
             return@Column
@@ -82,15 +93,30 @@ fun ImagenLugar(lugar: Lugar, mundo: Mundo, vm: MundoViewModel, alVolver: () -> 
         val pines = sublugares.filter { it.xEnPadre != null && it.yEnPadre != null }
             .map { PinMapa(it.id, it.nombre, it.xEnPadre!!, it.yEnPadre!!, COLOR_SUBLUGAR) } +
             lugar.puntos.map { PinMapa(it.id, it.nombre, it.x, it.y, COLOR_PUNTO) }
-        FlowRow(Modifier.padding(horizontal = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton(onClick = { selector.launch() }) { Text(t.cambiarImagen) }
-            OutlinedButton(onClick = { confirmarQuitar = true }) { Text(t.quitarImagen) }
+        // Misma barra que la pestaña Mapa
+        FlowRow(
+            Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.Center,
+        ) {
+            FilledTonalButton(onClick = { selector.launch() }) {
+                Icon(Icons.Default.Image, null, Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text(t.cambiarImagen)
+            }
+            FilledTonalButton(onClick = { confirmarQuitar = true }) {
+                Icon(Icons.Default.HideImage, null, Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text(t.quitarImagen)
+            }
             IconButton(onClick = { escala = 1f; desplazamiento = Offset.Zero }) {
                 Icon(Icons.Default.CenterFocusStrong, t.centrarMapa)
             }
             BotonExportar(imagen, pines, lugar.nombre)
         }
-        Text(t.ayudaImagenLugar, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(horizontal = 12.dp))
+        // Cuántos sublugares hay colocados, cuántos faltan y cuántos puntos libres
+        FlowRow(Modifier.padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            val colocados = sublugares.count { it.xEnPadre != null && it.yEnPadre != null }
+            Etiqueta(t.enElMapa(colocados), COLOR_SUBLUGAR)
+            if (sublugares.size > colocados) Etiqueta(t.sinColocar(sublugares.size - colocados), MaterialTheme.colorScheme.onSurfaceVariant)
+            if (lugar.puntos.isNotEmpty()) Etiqueta(t.puntosLibresN(lugar.puntos.size), COLOR_PUNTO)
+        }
+        Text(t.ayudaImagenLugar, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp))
         VisorMapa(
             imagen = imagen,
             pines = pines,
