@@ -27,6 +27,13 @@ class MundosViewModel(private val repo: Repositorio) : ViewModel() {
         repo.guardar(nuevos.cambiarEnlaces(idFinal, enlaces))
     }
 
+    /** Une dos mundos con una línea en la constelación (o la quita si [unir] es false). */
+    fun enlazar(a: String, b: String, unir: Boolean) {
+        val actuales = repo.mundos.value
+        val enlaces = actuales.find { it.id == a }?.enlaces?.toSet() ?: return
+        repo.guardar(actuales.cambiarEnlaces(a, if (unir) enlaces + b else enlaces - b))
+    }
+
     /** Guarda dónde se ha dejado un mundo al arrastrarlo en la constelación. */
     fun moverEnConstelacion(id: String, x: Float, y: Float) {
         repo.guardar(repo.mundos.value.map { if (it.id == id) it.copy(posX = x, posY = y) else it })

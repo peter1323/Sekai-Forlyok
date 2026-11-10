@@ -152,6 +152,13 @@ class Textos(
     val peinados: Map<Peinado, String>,
     val ropas: Map<Ropa, String>,
     val accesorios: Map<Accesorio, String>,
+    val unir: String,
+    val borrarLinea: String,
+    val eligePrimerCirculo: String,
+    val eligeSegundoCirculo: String,
+    val tocaUnaLinea: String,
+    val exportar: String,
+    val exportarExplicacion: String,
 )
 
 val ESPANOL = Textos(
@@ -263,7 +270,7 @@ val ESPANOL = Textos(
     descargas = "Descargas y actualizaciones",
     constelacion = "Constelación",
     verLista = "Lista",
-    ayudaConstelacion = "Toca un círculo para abrirlo y arrástralo para moverlo. Los enlaces se eligen al editar.",
+    ayudaConstelacion = "Toca un círculo para abrirlo y arrástralo para moverlo.",
     enlazadoCon = "Enlazado con (constelación)",
     imagenDelLugar = "Imagen del lugar",
     imagenLugarExplicacion = "Añade una imagen JPG o PNG de este lugar (por ejemplo, el plano de una ciudad). Después podrás marcar en ella sus sublugares o puntos como \"Plaza central\" o \"Ayuntamiento\".",
@@ -306,6 +313,13 @@ val ESPANOL = Textos(
         Accesorio.PARCHE to "Parche",
         Accesorio.CICATRIZ to "Cicatriz",
     ),
+    unir = "Unir",
+    borrarLinea = "Borrar línea",
+    eligePrimerCirculo = "Toca el primer personaje.",
+    eligeSegundoCirculo = "Ahora toca el segundo personaje.",
+    tocaUnaLinea = "Toca la línea que quieres borrar.",
+    exportar = "Exportar imagen",
+    exportarExplicacion = "Se guarda la imagen con sus pines y nombres. ¿En qué formato?",
 )
 
 val INGLES = Textos(
@@ -417,7 +431,7 @@ val INGLES = Textos(
     descargas = "Downloads and updates",
     constelacion = "Constellation",
     verLista = "List",
-    ayudaConstelacion = "Tap a circle to open it and drag it to move it. Links are chosen when editing.",
+    ayudaConstelacion = "Tap a circle to open it and drag it to move it.",
     enlazadoCon = "Linked to (constellation)",
     imagenDelLugar = "Location image",
     imagenLugarExplicacion = "Add a JPG or PNG image of this location (for example, a city plan). Then you can mark its sub-locations or points like \"Main square\" or \"Town hall\" on it.",
@@ -460,6 +474,13 @@ val INGLES = Textos(
         Accesorio.PARCHE to "Eye patch",
         Accesorio.CICATRIZ to "Scar",
     ),
+    unir = "Link",
+    borrarLinea = "Delete line",
+    eligePrimerCirculo = "Tap the first character.",
+    eligeSegundoCirculo = "Now tap the second character.",
+    tocaUnaLinea = "Tap the line you want to delete.",
+    exportar = "Export image",
+    exportarExplicacion = "The image is saved with its pins and names. Which format?",
 )
 
 fun textosDe(idioma: Idioma): Textos = when (idioma) {

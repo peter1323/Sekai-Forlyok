@@ -78,18 +78,19 @@ fun ImagenLugar(lugar: Lugar, mundo: Mundo, vm: MundoViewModel, alVolver: () -> 
         }
         var escala by remember { mutableFloatStateOf(1f) }
         var desplazamiento by remember { mutableStateOf(Offset.Zero) }
+        // Pines: los sublugares colocados (azules) y los puntos libres (dorados)
+        val pines = sublugares.filter { it.xEnPadre != null && it.yEnPadre != null }
+            .map { PinMapa(it.id, it.nombre, it.xEnPadre!!, it.yEnPadre!!, COLOR_SUBLUGAR) } +
+            lugar.puntos.map { PinMapa(it.id, it.nombre, it.x, it.y, COLOR_PUNTO) }
         FlowRow(Modifier.padding(horizontal = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(onClick = { selector.launch() }) { Text(t.cambiarImagen) }
             OutlinedButton(onClick = { confirmarQuitar = true }) { Text(t.quitarImagen) }
             IconButton(onClick = { escala = 1f; desplazamiento = Offset.Zero }) {
                 Icon(Icons.Default.CenterFocusStrong, t.centrarMapa)
             }
+            BotonExportar(imagen, pines, lugar.nombre)
         }
         Text(t.ayudaImagenLugar, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(horizontal = 12.dp))
-        // Pines: los sublugares colocados (azules) y los puntos libres (dorados)
-        val pines = sublugares.filter { it.xEnPadre != null && it.yEnPadre != null }
-            .map { PinMapa(it.id, it.nombre, it.xEnPadre!!, it.yEnPadre!!, COLOR_SUBLUGAR) } +
-            lugar.puntos.map { PinMapa(it.id, it.nombre, it.x, it.y, COLOR_PUNTO) }
         VisorMapa(
             imagen = imagen,
             pines = pines,

@@ -1,11 +1,13 @@
 package com.sekaiforlyok
 
+import androidx.compose.ui.geometry.Offset
 import com.sekaiforlyok.model.Faccion
 import com.sekaiforlyok.model.Lugar
 import com.sekaiforlyok.model.Mundo
 import com.sekaiforlyok.model.Personaje
 import com.sekaiforlyok.model.Rango
 import com.sekaiforlyok.model.Relacion
+import com.sekaiforlyok.ui.distanciaASegmento
 import com.sekaiforlyok.viewmodel.alturaTerreno
 import com.sekaiforlyok.viewmodel.arbolLugares
 import com.sekaiforlyok.viewmodel.borrarFaccion
@@ -146,5 +148,13 @@ class ReglasMundoTest {
         val plaza = m.borrarLugar("ciudad").lugares.first { it.id == "plaza" }
         assertEquals("reino", plaza.padreId)
         assertNull(plaza.xEnPadre)
+    }
+
+    @Test
+    fun laDistanciaAUnaLineaSeMideHastaElTrozoMasCercano() {
+        val a = Offset(0f, 0f)
+        val b = Offset(10f, 0f)
+        assertEquals(3f, distanciaASegmento(Offset(5f, 3f), a, b))   // Encima del medio
+        assertEquals(5f, distanciaASegmento(Offset(13f, 4f), a, b))  // Más allá del extremo b
     }
 }

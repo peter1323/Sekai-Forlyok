@@ -1,16 +1,20 @@
 package com.sekaiforlyok.ui
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
@@ -56,6 +60,8 @@ fun PestanaRelaciones(mundo: Mundo, vm: MundoViewModel) {
     var avisoFaltanPersonajes by remember { mutableStateOf(false) }
     var enConstelacion by rememberSaveable { mutableStateOf(false) }
     var personajeVisto by remember { mutableStateOf<String?>(null) } // Círculo pulsado en la constelación
+    var modo by remember { mutableStateOf(ModoConstelacion.VER) }
+    var primero by remember { mutableStateOf<String?>(null) } // Primer círculo elegido al unir
 
     fun nombre(id: String) = mundo.personajes.find { it.id == id }?.nombre ?: "?"
 
@@ -69,12 +75,32 @@ fun PestanaRelaciones(mundo: Mundo, vm: MundoViewModel) {
     }) {
       Column {
         // Elegir cómo verlas: en lista o como constelación
-        Row(Modifier.padding(horizontal = 12.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilterChip(!enConstelacion, onClick = { enConstelacion = false }, label = { Text(t.verLista) })
+        FlowRow(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(!enConstelacion, onClick = { enConstelacion = false; modo = ModoConstelacion.VER }, label = { Text(t.verLista) })
             FilterChip(enConstelacion, onClick = { enConstelacion = true }, label = { Text(t.constelacion) })
+            if (enConstelacion) {
+                Spacer(Modifier.weight(1f)) // Empuja Unir y Borrar línea al lado derecho
+                BotonesModo(modo, puedeUnir = mundo.personajes.size >= 2, alCambiar = { modo = it; primero = null }, alNoPoderUnir = { avisoFaltanPersonajes = true })
+            }
         }
         if (enConstelacion) {
-            ConstelacionRelaciones(mundo, vm, alPulsar = { personajeVisto = it })
+            TextoModo(modo, hayPrimero = primero != null)
+            ConstelacionRelaciones(
+                mundo, vm, seleccionado = primero,
+                alPulsar = { id ->
+                    when {
+                        modo != ModoConstelacion.UNIR -> personajeVisto = id
+                        primero == null -> primero = id
+                        primero == id -> primero = null // Tocar el mismo otra vez lo desmarca
+                        else -> {
+                            // Ya están los dos: se abre el formulario de siempre con ellos elegidos
+                            editando = Relacion(nuevoId(), primero!!, id)
+                            primero = null; modo = ModoConstelacion.VER
+                        }
+                    }
+                },
+                alPulsarRelacion = if (modo == ModoConstelacion.BORRAR) { r -> borrando = r; modo = ModoConstelacion.VER } else null,
+            )
             return@Column
         }
         if (mundo.relaciones.isEmpty()) ListaVacia(t.sinRelaciones)
@@ -165,7 +191,13 @@ fun PestanaRelaciones(mundo: Mundo, vm: MundoViewModel) {
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ConstelacionRelaciones(mundo: Mundo, vm: MundoViewModel, alPulsar: (String) -> Unit) {
+private fun ConstelacionRelaciones(
+    mundo: Mundo,
+    vm: MundoViewModel,
+    seleccionado: String?,
+    alPulsar: (String) -> Unit,
+    alPulsarRelacion: ((Relacion) -> Unit)?, // null = las líneas no se pueden tocar
+) {
     val t = LocalTextos.current
     val tipos = mundo.relaciones.map { it.tipo }.distinct()
     if (tipos.isNotEmpty()) {
@@ -179,7 +211,13 @@ private fun ConstelacionRelaciones(mundo: Mundo, vm: MundoViewModel, alPulsar: (
         enlaces = mundo.relaciones.map { EnlaceConstelacion(it.personaje1Id, it.personaje2Id, colorRelacion(it.tipo)) },
         alMover = vm::moverPersonaje,
         alPulsar = alPulsar,
+        // Las líneas van en el mismo orden que mundo.relaciones
+        alPulsarEnlace = alPulsarRelacion?.let { elegir -> { i -> elegir(mundo.relaciones[i]) } },
     ) { nodo ->
-        personajes.find { it.id == nodo.id }?.let { AvatarPersonaje(it, 72.dp) }
+        personajes.find { it.id == nodo.id }?.let {
+            // El círculo elegido al unir lleva un aro blanco
+            val aro = if (nodo.id == seleccionado) Modifier.border(4.dp, Color.White, CircleShape).padding(4.dp) else Modifier
+            Box(aro) { AvatarPersonaje(it, 72.dp) }
+        }
     }
 }

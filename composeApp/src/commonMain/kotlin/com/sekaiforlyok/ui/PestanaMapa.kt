@@ -102,6 +102,7 @@ fun PestanaMapa(mundo: Mundo, vm: MundoViewModel) {
             // Barra de botones encima del mapa
             var escala by remember { mutableFloatStateOf(1f) }
             var desplazamiento by remember { mutableStateOf(Offset.Zero) }
+            val pines = mundo.lugares.filter { it.x != null && it.y != null }.map { PinMapa(it.id, it.nombre, it.x!!, it.y!!) }
             FlowRow(Modifier.padding(horizontal = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(onClick = { selector.launch() }) { Text(t.cambiarImagen) }
                 OutlinedButton(onClick = generar) { Text(t.generarTerreno) }
@@ -109,6 +110,7 @@ fun PestanaMapa(mundo: Mundo, vm: MundoViewModel) {
                     Icon(Icons.Default.CenterFocusStrong, t.centrarMapa)
                 }
                 IconButton(onClick = { verAyuda = true }) { Icon(Icons.Default.Info, t.ayuda) }
+                BotonExportar(imagen, pines, mundo.nombre)
             }
             Text(
                 t.ayudaMapa,
@@ -117,7 +119,7 @@ fun PestanaMapa(mundo: Mundo, vm: MundoViewModel) {
             )
             VisorMapa(
                 imagen = imagen,
-                pines = mundo.lugares.filter { it.x != null && it.y != null }.map { PinMapa(it.id, it.nombre, it.x!!, it.y!!) },
+                pines = pines,
                 escala = escala,
                 desplazamiento = desplazamiento,
                 alMover = { nuevaEscala, nuevoDesplazamiento -> escala = nuevaEscala; desplazamiento = nuevoDesplazamiento },

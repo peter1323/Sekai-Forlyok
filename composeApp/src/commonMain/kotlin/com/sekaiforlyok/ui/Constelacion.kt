@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -62,6 +63,7 @@ fun Constelacion(
     alMover: (id: String, x: Float, y: Float) -> Unit,
     alPulsar: (id: String) -> Unit,
     modifier: Modifier = Modifier,
+    alPulsarEnlace: ((indice: Int) -> Unit)? = null, // null = las líneas no se pueden tocar
     contenido: @Composable (NodoConstelacion) -> Unit,
 ) {
     BoxWithConstraints(modifier.fillMaxSize().background(COLOR_CIELO)) {
@@ -79,10 +81,33 @@ fun Constelacion(
         }
         // El lienzo crece hacia abajo si hay círculos más abajo de lo que cabe en pantalla
         val altoDp = max(maxHeight.value, (posiciones.values.maxOfOrNull { it.y } ?: 0f) + ALTO_NODO.value + 40f)
+        // Los gestos viven más que una pantalla dibujada: así siempre llaman a la versión actual
         val alMoverActual by rememberUpdatedState(alMover)
+        val alPulsarActual by rememberUpdatedState(alPulsar)
+        val alPulsarEnlaceActual by rememberUpdatedState(alPulsarEnlace)
+        val enlacesActuales by rememberUpdatedState(enlaces)
 
         Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-            Box(Modifier.fillMaxWidth().height(altoDp.dp)) {
+            Box(
+                Modifier.fillMaxWidth().height(altoDp.dp)
+                    // Tocar el cielo: busca la línea más cercana (los toques en un círculo no llegan aquí)
+                    .pointerInput(posiciones) {
+                        detectTapGestures { toque ->
+                            val elegir = alPulsarEnlaceActual ?: return@detectTapGestures
+                            val radio = TAM_NODO.toPx() / 2
+                            val cercano = enlacesActuales.withIndex().mapNotNull { (i, e) ->
+                                val a = posiciones[e.desde] ?: return@mapNotNull null
+                                val b = posiciones[e.hasta] ?: return@mapNotNull null
+                                i to distanciaASegmento(
+                                    toque,
+                                    Offset(a.x * density, a.y * density + radio),
+                                    Offset(b.x * density, b.y * density + radio),
+                                )
+                            }.minByOrNull { it.second }
+                            if (cercano != null && cercano.second < 24.dp.toPx()) elegir(cercano.first)
+                        }
+                    },
+            ) {
                 // Fondo: estrellas y líneas entre los círculos
                 Canvas(Modifier.fillMaxSize()) {
                     val estrellas = Random(7)
@@ -112,8 +137,9 @@ fun Constelacion(
                             // La posición guardada es el centro horizontal y el borde de arriba del círculo
                             .offset { IntOffset(((pos.x - ANCHO_NODO.value / 2) * density).roundToInt(), (pos.y * density).roundToInt()) }
                             .width(ANCHO_NODO)
-                            .pointerInput(nodo.id) { detectTapGestures { alPulsar(nodo.id) } }
-                            .pointerInput(nodo.id, anchoDp) {
+                            .pointerInput(nodo.id) { detectTapGestures { alPulsarActual(nodo.id) } }
+                            // "posiciones" en la clave: al guardar se crea un mapa nuevo y el gesto tiene que usar ese
+                            .pointerInput(nodo.id, anchoDp, posiciones) {
                                 detectDragGestures(
                                     onDragEnd = {
                                         val p = posiciones[nodo.id] ?: return@detectDragGestures
@@ -154,4 +180,51 @@ private fun posicionesZigzag(cantidad: Int): List<Pair<Float, Float>> = List(can
     val x = 0.2f + columna * 0.3f
     val y = 24f + fila * SEPARACION_FILAS.value + (if (columna == 1) 40f else 0f) // El del medio, un poco más abajo
     x to y
+}
+
+/** Distancia (en píxeles) del punto [p] al segmento que va de [a] a [b]. */
+internal fun distanciaASegmento(p: Offset, a: Offset, b: Offset): Float {
+    val ab = b - a
+    val largo2 = ab.x * ab.x + ab.y * ab.y
+    // Proyección del punto sobre la línea, limitada a los extremos del segmento
+    val t = if (largo2 == 0f) 0f else (((p - a).x * ab.x + (p - a).y * ab.y) / largo2).coerceIn(0f, 1f)
+    return (p - (a + ab * t)).getDistance()
+}
+
+/** Qué hace tocar la constelación: ver/abrir, unir dos círculos o borrar una línea. */
+enum class ModoConstelacion { VER, UNIR, BORRAR }
+
+/**
+ * Botones "Unir" y "Borrar línea" (pulsar otra vez para salir del modo).
+ * [puedeUnir] es false si no hay al menos dos círculos; entonces se llama a [alNoPoderUnir].
+ */
+@Composable
+fun BotonesModo(
+    modo: ModoConstelacion,
+    puedeUnir: Boolean,
+    alCambiar: (ModoConstelacion) -> Unit,
+    alNoPoderUnir: () -> Unit = {},
+) {
+    val t = LocalTextos.current
+    FilterChip(modo == ModoConstelacion.UNIR, onClick = {
+        when {
+            !puedeUnir -> alNoPoderUnir()
+            else -> alCambiar(if (modo == ModoConstelacion.UNIR) ModoConstelacion.VER else ModoConstelacion.UNIR)
+        }
+    }, label = { Text(t.unir) })
+    FilterChip(modo == ModoConstelacion.BORRAR, onClick = {
+        alCambiar(if (modo == ModoConstelacion.BORRAR) ModoConstelacion.VER else ModoConstelacion.BORRAR)
+    }, label = { Text(t.borrarLinea) })
+}
+
+/** Instrucción del modo actual ("Toca el primer…", "Toca la línea…"). Nada en modo VER. */
+@Composable
+fun TextoModo(modo: ModoConstelacion, hayPrimero: Boolean) {
+    val t = LocalTextos.current
+    val texto = when (modo) {
+        ModoConstelacion.UNIR -> if (hayPrimero) t.eligeSegundoCirculo else t.eligePrimerCirculo
+        ModoConstelacion.BORRAR -> t.tocaUnaLinea
+        ModoConstelacion.VER -> return
+    }
+    Text(texto, Modifier.padding(horizontal = 12.dp))
 }

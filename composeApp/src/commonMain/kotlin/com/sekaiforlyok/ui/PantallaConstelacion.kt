@@ -3,9 +3,12 @@ package com.sekaiforlyok.ui
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -20,7 +23,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,12 +40,15 @@ import com.sekaiforlyok.viewmodel.parejasEnlazadas
 
 private val COLOR_ENLACE = Color(0xFFE9C46A) // Líneas doradas entre mundos
 
-/** Pantalla con todos los mundos como constelación. Los enlaces se eligen al editar un mundo. */
+/** Pantalla con todos los mundos como constelación. Los enlaces se hacen con "Unir" o al editar un mundo. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantallaConstelacion(vm: MundosViewModel, alVolver: () -> Unit, alAbrirMundo: (String) -> Unit) {
     val t = LocalTextos.current
     val mundos by vm.mundos.collectAsState()
+    var modo by remember { mutableStateOf(ModoConstelacion.VER) }
+    var primero by remember { mutableStateOf<String?>(null) }                 // Primer mundo elegido al unir
+    var borrando by remember { mutableStateOf<Pair<String, String>?>(null) } // Enlace a punto de borrarse
     Scaffold(
         topBar = {
             TopAppBar(
@@ -50,18 +58,46 @@ fun PantallaConstelacion(vm: MundosViewModel, alVolver: () -> Unit, alAbrirMundo
         },
     ) { margen ->
         Column(Modifier.padding(margen).fillMaxSize()) {
-            Text(
-                if (mundos.isEmpty()) t.sinMundos else t.ayudaConstelacion,
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
-            )
+            Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    if (mundos.isEmpty()) t.sinMundos else t.ayudaConstelacion,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.weight(1f),
+                )
+                BotonesModo(modo, puedeUnir = mundos.size >= 2, alCambiar = { modo = it; primero = null })
+            }
+            TextoModo(modo, hayPrimero = primero != null)
+            val parejas = mundos.parejasEnlazadas()
             Constelacion(
                 nodos = mundos.map { NodoConstelacion(it.id, it.nombre, it.posX, it.posY) },
-                enlaces = mundos.parejasEnlazadas().map { (a, b) -> EnlaceConstelacion(a, b, COLOR_ENLACE) },
+                enlaces = parejas.map { (a, b) -> EnlaceConstelacion(a, b, COLOR_ENLACE) },
                 alMover = vm::moverEnConstelacion,
-                alPulsar = alAbrirMundo,
-            ) { nodo -> mundos.find { it.id == nodo.id }?.let { CirculoMundo(it, vm) } }
+                alPulsar = { id ->
+                    when {
+                        modo != ModoConstelacion.UNIR -> alAbrirMundo(id)
+                        primero == null -> primero = id
+                        primero == id -> primero = null // Tocar el mismo otra vez lo desmarca
+                        else -> { vm.enlazar(primero!!, id, unir = true); primero = null; modo = ModoConstelacion.VER }
+                    }
+                },
+                alPulsarEnlace = if (modo == ModoConstelacion.BORRAR) { i -> borrando = parejas[i]; modo = ModoConstelacion.VER } else null,
+            ) { nodo ->
+                mundos.find { it.id == nodo.id }?.let {
+                    // El círculo elegido al unir lleva un aro blanco
+                    val aro = if (nodo.id == primero) Modifier.border(4.dp, Color.White, CircleShape).padding(4.dp) else Modifier
+                    Box(aro) { CirculoMundo(it, vm) }
+                }
+            }
         }
+    }
+
+    borrando?.let { (a, b) ->
+        fun nombre(id: String) = mundos.find { it.id == id }?.nombre ?: "?"
+        ConfirmarBorrado(
+            nombre = "${nombre(a)} ↔ ${nombre(b)}",
+            alConfirmar = { vm.enlazar(a, b, unir = false); borrando = null },
+            alCancelar = { borrando = null },
+        )
     }
 }
 
