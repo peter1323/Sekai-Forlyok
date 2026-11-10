@@ -35,6 +35,7 @@ import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.unit.dp
 import com.sekaiforlyok.model.Accesorio
 import com.sekaiforlyok.model.Apariencia
+import com.sekaiforlyok.model.Orejas
 import com.sekaiforlyok.model.Peinado
 import com.sekaiforlyok.model.Ropa
 
@@ -45,7 +46,11 @@ private const val ANCHO = 100f
 private const val ALTO = 140f
 
 // Colores que se pueden elegir en el editor
-val COLORES_PIEL = listOf(0xFFFCE4D6, 0xFFF5D0B5, 0xFFE8B48F, 0xFFC68A5E, 0xFF8D5A3B, 0xFF5C3A24)
+val COLORES_PIEL = listOf(
+    0xFFFCE4D6, 0xFFF5D0B5, 0xFFE8B48F, 0xFFC68A5E, 0xFF8D5A3B, 0xFF5C3A24,
+    // Pieles de fantasía: azul, verde, amarillo, gris, rojo, morado y blanco pálido
+    0xFF7FB3E8, 0xFF8BC48A, 0xFFF2D46B, 0xFFA7A9AC, 0xFFD9675B, 0xFFA98BD6, 0xFFF4F4F8,
+)
 val COLORES_PELO = listOf(
     0xFF1B1B1B, 0xFF4A3020, 0xFF8B5A2B, 0xFFE8C872, 0xFFF2F2F2,
     0xFFC0392B, 0xFFE91E63, 0xFF8E44AD, 0xFF2E86DE, 0xFF27AE60,
@@ -121,8 +126,22 @@ private fun DrawScope.dibujarChibi(a: Apariencia) {
     if (a.ropa == Ropa.TUNICA) drawRect(Color(0xFFE9C46A), Offset(33f, 104f), Size(34f, 4f)) // Cinturón
 
     // 3. Cabeza: orejas, cara, ojos, mejillas y boca
-    drawCircle(piel, 6f, Offset(20f, 54f))
-    drawCircle(piel, 6f, Offset(80f, 54f))
+    when (a.orejas) {
+        Orejas.HUMANAS -> {
+            drawCircle(piel, 6f, Offset(20f, 54f))
+            drawCircle(piel, 6f, Offset(80f, 54f))
+        }
+        Orejas.PUNTIAGUDAS -> {
+            // Largas y hacia fuera, como las de un elfo o un duende
+            drawPath(Path().apply { moveTo(24f, 48f); lineTo(2f, 34f); lineTo(24f, 62f); close() }, piel)
+            drawPath(Path().apply { moveTo(76f, 48f); lineTo(98f, 34f); lineTo(76f, 62f); close() }, piel)
+        }
+        Orejas.CONEJO -> listOf(30f, 58f).forEach { x ->
+            drawOval(pelo, Offset(x, 0f), Size(12f, 34f))
+            drawOval(Color(0xFFF8BBD0), Offset(x + 3f, 5f), Size(6f, 24f))
+        }
+        Orejas.GATO -> Unit // Van encima del pelo (más abajo)
+    }
     drawCircle(piel, 30f, Offset(50f, 50f))
     drawCircle(oscuro.copy(alpha = 0.25f), 30f, Offset(50f, 50f), style = borde)
     listOf(39f, 61f).forEach { x ->
@@ -163,6 +182,13 @@ private fun DrawScope.dibujarChibi(a: Apariencia) {
         Peinado.MONO -> drawCircle(pelo, 11f, Offset(50f, 16f))
         Peinado.COLETA -> drawCircle(Color(0xFFE53935), 3.5f, Offset(80f, 36f)) // Goma de la coleta
         else -> Unit
+    }
+
+    if (a.orejas == Orejas.GATO) {
+        drawPath(Path().apply { moveTo(20f, 34f); lineTo(24f, 6f); lineTo(44f, 22f); close() }, pelo)
+        drawPath(Path().apply { moveTo(80f, 34f); lineTo(76f, 6f); lineTo(56f, 22f); close() }, pelo)
+        drawPath(Path().apply { moveTo(25f, 28f); lineTo(27f, 13f); lineTo(38f, 22f); close() }, Color(0xFFF8BBD0))
+        drawPath(Path().apply { moveTo(75f, 28f); lineTo(73f, 13f); lineTo(62f, 22f); close() }, Color(0xFFF8BBD0))
     }
 
     // 5. Accesorio
@@ -227,6 +253,7 @@ private fun OpcionesChibi(apariencia: Apariencia, alCambiar: (Apariencia) -> Uni
     val t = LocalTextos.current
     Desplegable(t.peinado, Peinado.entries, apariencia.peinado, { t.peinados.getValue(it) }) { alCambiar(apariencia.copy(peinado = it)) }
     Muestras(t.colorPiel, COLORES_PIEL, apariencia.piel) { alCambiar(apariencia.copy(piel = it)) }
+    Desplegable(t.orejas, Orejas.entries, apariencia.orejas, { t.tiposOrejas.getValue(it) }) { alCambiar(apariencia.copy(orejas = it)) }
     Muestras(t.colorPelo, COLORES_PELO, apariencia.pelo) { alCambiar(apariencia.copy(pelo = it)) }
     Muestras(t.colorOjos, COLORES_OJOS, apariencia.ojos) { alCambiar(apariencia.copy(ojos = it)) }
     Desplegable(t.ropa, Ropa.entries, apariencia.ropa, { t.ropas.getValue(it) }) { alCambiar(apariencia.copy(ropa = it)) }

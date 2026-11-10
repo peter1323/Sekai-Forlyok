@@ -3,8 +3,10 @@ package com.sekaiforlyok.ui
 import androidx.compose.runtime.staticCompositionLocalOf
 import com.sekaiforlyok.model.Accesorio
 import com.sekaiforlyok.model.Idioma
+import com.sekaiforlyok.model.Orejas
 import com.sekaiforlyok.model.Peinado
 import com.sekaiforlyok.model.Ropa
+import com.sekaiforlyok.model.Sexo
 import com.sekaiforlyok.model.TipoLugar
 import com.sekaiforlyok.model.TipoRelacion
 import com.sekaiforlyok.model.TipoRelacionFaccion
@@ -170,6 +172,12 @@ class Textos(
     val sublugaresN: (Int) -> String,
     val nacidosAqui: (Int) -> String,
     val moverLugarTitulo: String,
+    val raza: String,
+    val sexo: String,
+    val sinIndicar: String,
+    val sexos: Map<Sexo, String>,
+    val orejas: String,
+    val tiposOrejas: Map<Orejas, String>,
 )
 
 val ESPANOL = Textos(
@@ -345,6 +353,12 @@ val ESPANOL = Textos(
     sublugaresN = { if (it == 1) "1 sublugar" else "$it sublugares" },
     nacidosAqui = { if (it == 1) "1 personaje" else "$it personajes" },
     moverLugarTitulo = "¿Cambiar de lugar?",
+    raza = "Raza",
+    sexo = "Sexo",
+    sinIndicar = "Sin indicar",
+    sexos = mapOf(Sexo.HOMBRE to "Hombre", Sexo.MUJER to "Mujer", Sexo.SIN_SEXO to "Sin sexo (unisex)"),
+    orejas = "Orejas",
+    tiposOrejas = mapOf(Orejas.HUMANAS to "Humanas", Orejas.PUNTIAGUDAS to "Puntiagudas (elfo, duende)", Orejas.GATO to "De gato", Orejas.CONEJO to "De conejo"),
 )
 
 val INGLES = Textos(
@@ -520,6 +534,12 @@ val INGLES = Textos(
     sublugaresN = { if (it == 1) "1 sub-place" else "$it sub-places" },
     nacidosAqui = { if (it == 1) "1 character" else "$it characters" },
     moverLugarTitulo = "Change place?",
+    raza = "Race",
+    sexo = "Sex",
+    sinIndicar = "Not set",
+    sexos = mapOf(Sexo.HOMBRE to "Male", Sexo.MUJER to "Female", Sexo.SIN_SEXO to "Sexless (unisex)"),
+    orejas = "Ears",
+    tiposOrejas = mapOf(Orejas.HUMANAS to "Human", Orejas.PUNTIAGUDAS to "Pointed (elf, goblin)", Orejas.GATO to "Cat", Orejas.CONEJO to "Rabbit"),
 )
 
 fun textosDe(idioma: Idioma): Textos = when (idioma) {

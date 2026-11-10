@@ -42,7 +42,7 @@ class MundoViewModel(private val repo: Repositorio, private val mundoId: String)
 
     /** Añade un personaje nuevo o guarda los cambios de uno existente (mismo id). */
     fun guardarPersonaje(p: Personaje) = cambiar { m ->
-        m.copy(personajes = m.personajes.reemplazarOAnadir(p.copy(nombre = p.nombre.trim())) { it.id })
+        m.copy(personajes = m.personajes.reemplazarOAnadir(p.copy(nombre = p.nombre.trim(), raza = p.raza.trim())) { it.id })
     }
 
     fun borrarPersonaje(id: String) = cambiar { it.borrarPersonaje(id) }

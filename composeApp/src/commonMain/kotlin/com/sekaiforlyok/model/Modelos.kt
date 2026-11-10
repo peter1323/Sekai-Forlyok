@@ -36,6 +36,8 @@ data class Personaje(
     val poderes: List<String> = emptyList(),
     val faccionId: String? = null,    // null = sin facción
     val lugarId: String? = null,      // Lugar de origen; null = sin lugar
+    val raza: String = "",            // Texto libre: "Humano", "Elfo", "Duende"…
+    val sexo: Sexo? = null,           // null = sin indicar
     val descripcion: String = "",     // Descripción e historia
     val apariencia: Apariencia? = null, // La personita chibi; null = sin crear
     val posX: Float? = null,          // Posición en la constelación de relaciones (igual que en Mundo)
@@ -124,9 +126,14 @@ data class Apariencia(
     val ropa: Ropa = Ropa.CAMISA,
     val colorRopa: Long = 0xFF3C3489,
     val accesorio: Accesorio = Accesorio.NINGUNO,
+    val orejas: Orejas = Orejas.HUMANAS,
 )
 
 // Los textos de estas opciones están en ui/Textos.kt (según el idioma)
 enum class Peinado { CORTO, PUNTAS, MELENA, LARGO, COLETA, DOS_COLETAS, MONO, CALVO }
 enum class Ropa { CAMISA, CAPA, ARMADURA, TUNICA }
 enum class Accesorio { NINGUNO, GAFAS, CORONA, CUERNOS, PARCHE, CICATRIZ }
+enum class Orejas { HUMANAS, PUNTIAGUDAS, GATO, CONEJO }
+
+/** SIN_SEXO = razas que no tienen sexos. El texto está en ui/Textos.kt. */
+enum class Sexo { HOMBRE, MUJER, SIN_SEXO }

@@ -48,6 +48,7 @@ import com.sekaiforlyok.model.Lugar
 import com.sekaiforlyok.model.Mundo
 import com.sekaiforlyok.model.Personaje
 import com.sekaiforlyok.model.Rango
+import com.sekaiforlyok.model.Sexo
 import com.sekaiforlyok.viewmodel.MundoViewModel
 import com.sekaiforlyok.viewmodel.nuevoId
 import com.sekaiforlyok.viewmodel.personajesOrdenados
@@ -151,8 +152,9 @@ private fun FilaPersonaje(p: Personaje, faccion: Faccion?, alEditar: () -> Unit,
         Column(Modifier.weight(1f)) {
             val edad = p.edad?.let { t.edadAnos(it) } ?: ""
             Text(p.nombre + edad, style = MaterialTheme.typography.titleMedium)
+            // Facción · raza · sexo (lo que esté puesto)
             Text(
-                faccion?.nombre ?: t.sinFaccion,
+                listOfNotNull(faccion?.nombre ?: t.sinFaccion, p.raza.trim().ifBlank { null }, p.sexo?.let(t.sexos::getValue)).joinToString(" · "),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -198,6 +200,9 @@ private fun DialogoPersonaje(original: Personaje, mundo: Mundo, alGuardar: (Pers
         )
         // Rangos de S a E en el desplegable
         Desplegable(t.rango, Rango.entries.reversed(), p.rango, { it.name }) { p = p.copy(rango = it) }
+        OutlinedTextField(p.raza, { p = p.copy(raza = it) }, label = { Text(t.raza) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+        // "null" es la opción "Sin indicar"
+        Desplegable(t.sexo, listOf<Sexo?>(null) + Sexo.entries, p.sexo, { it?.let(t.sexos::getValue) ?: t.sinIndicar }) { p = p.copy(sexo = it) }
 
         // Poderes: se escriben y se añaden como chips; la X los quita
         Text(t.poderes, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(top = 8.dp))
