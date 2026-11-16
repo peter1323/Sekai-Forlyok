@@ -177,27 +177,30 @@ private fun TarjetaPersonaje(p: Personaje, faccion: Faccion?, lugar: Lugar?, alE
         border = BorderStroke(1.dp, color.copy(alpha = 0.45f)),
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Row(Modifier.padding(start = 12.dp, top = 10.dp, bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-            val apariencia = p.apariencia
-            if (apariencia != null) {
-                Chibi(apariencia, Modifier.size(60.dp, 84.dp).clip(RoundedCornerShape(10.dp)).background(color.copy(alpha = 0.18f)).padding(4.dp))
-            } else {
-                AvatarPersonaje(p, 56.dp)
-            }
-            Spacer(Modifier.width(14.dp))
-            Column(Modifier.weight(1f)) {
-                Text(p.nombre + (p.edad?.let { t.edadAnos(it) } ?: ""), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = color)
-                // Raza y sexo, si están puestos
-                val datos = listOfNotNull(p.raza.ifBlank { null }, p.sexo?.let(t.sexos::getValue))
-                if (datos.isNotEmpty()) Text(datos.joinToString(" · "), style = MaterialTheme.typography.bodySmall)
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Etiqueta("${t.rango} ${p.rango.name}", color)
-                    Etiqueta(faccion?.nombre ?: t.sinFaccion, MaterialTheme.colorScheme.onSurfaceVariant)
-                    if (lugar != null) Etiqueta("📍 " + lugar.nombre, MaterialTheme.colorScheme.onSurfaceVariant)
-                    p.poderes.forEach { Etiqueta("✦ $it", MaterialTheme.colorScheme.primary) }
+        Column(Modifier.padding(start = 12.dp, top = 10.dp, bottom = 10.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                val apariencia = p.apariencia
+                if (apariencia != null) {
+                    Chibi(apariencia, Modifier.size(60.dp, 84.dp).clip(RoundedCornerShape(10.dp)).background(color.copy(alpha = 0.18f)).padding(4.dp))
+                } else {
+                    AvatarPersonaje(p, 56.dp)
                 }
+                Spacer(Modifier.width(14.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(p.nombre + (p.edad?.let { t.edadAnos(it) } ?: ""), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = color)
+                    // Raza y sexo, si están puestos
+                    val datos = listOfNotNull(p.raza.ifBlank { null }, p.sexo?.let(t.sexos::getValue))
+                    if (datos.isNotEmpty()) Text(datos.joinToString(" · "), style = MaterialTheme.typography.bodySmall)
+                }
+                BotonesEditarBorrar(alEditar, alBorrar)
             }
-            BotonesEditarBorrar(alEditar, alBorrar)
+            // Etiquetas debajo, a todo el ancho: en el móvil no caben al lado de la cara y los botones
+            FlowRow(Modifier.padding(top = 6.dp, end = 12.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Etiqueta("${t.rango} ${p.rango.name}", color)
+                Etiqueta(faccion?.nombre ?: t.sinFaccion, MaterialTheme.colorScheme.onSurfaceVariant)
+                if (lugar != null) Etiqueta("📍 " + lugar.nombre, MaterialTheme.colorScheme.onSurfaceVariant)
+                p.poderes.forEach { Etiqueta("✦ $it", MaterialTheme.colorScheme.primary) }
+            }
         }
     }
 }
