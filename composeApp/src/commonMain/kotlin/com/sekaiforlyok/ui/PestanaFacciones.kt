@@ -53,6 +53,7 @@ import com.sekaiforlyok.model.Personaje
 import com.sekaiforlyok.model.RelacionFaccion
 import com.sekaiforlyok.model.TipoRelacionFaccion
 import com.sekaiforlyok.viewmodel.MundoViewModel
+import com.sekaiforlyok.viewmodel.indiceColorFaccion
 import com.sekaiforlyok.viewmodel.nuevoId
 import com.sekaiforlyok.viewmodel.personajesOrdenados
 
@@ -174,14 +175,13 @@ fun PestanaFacciones(mundo: Mundo, vm: MundoViewModel) {
     }
 }
 
-/** Colores de las facciones, por orden de creación: las 8 primeras nunca repiten color. */
+/** Colores de las facciones: cada una guarda el número del suyo (ver indiceColorFaccion). */
 private val COLORES_FACCION = listOf(
     Color(0xFFD4A017), Color(0xFFAB47BC), Color(0xFF42A5F5), Color(0xFFE53935),
     Color(0xFF4CAF50), Color(0xFF26A69A), Color(0xFFFF9800), Color(0xFFEC407A),
 )
 
-fun Mundo.colorFaccion(id: String): Color =
-    COLORES_FACCION[facciones.indexOfFirst { it.id == id }.coerceAtLeast(0) % COLORES_FACCION.size]
+fun Mundo.colorFaccion(id: String): Color = COLORES_FACCION[indiceColorFaccion(id) % COLORES_FACCION.size]
 
 private const val CARAS_VISIBLES = 6 // Más miembros se resumen como "+N"
 

@@ -36,4 +36,28 @@ class RepositorioTest {
         assertEquals(mundos, leido.mundos.value)
         assertEquals(ajustes, leido.ajustes.value)
     }
+
+    @Test
+    fun unaCopiaDeSeguridadPasaLosMundosYSusImagenesAOtraCarpeta() {
+        fun carpetaNueva() = Path(SystemTemporaryDirectory, "sekai-test-${Random.nextInt(1_000_000)}").toString()
+        val origen = Repositorio(carpetaNueva())
+        val ruta = origen.guardarImagen("mapa_m1.png", byteArrayOf(1, 2, 3))
+        origen.guardar(listOf(Mundo("m1", "Aethel", rutaMapa = ruta, lugares = listOf(Lugar("l1", "Seúl", rutaImagen = ruta)))))
+        val copia = origen.exportar()
+
+        // Otra carpeta (como otro dispositivo) que ya tiene una versión vieja de "m1" y otro mundo
+        val destino = Repositorio(carpetaNueva())
+        destino.guardar(listOf(Mundo("m1", "Viejo"), Mundo("m2", "Otro")))
+        assertEquals(1, destino.importar(copia))
+
+        val m1 = destino.mundos.value.first { it.id == "m1" }
+        assertEquals("Aethel", m1.nombre)                                       // Sustituido por el de la copia
+        assertEquals(listOf("m2", "m1"), destino.mundos.value.map { it.id })    // El otro se conserva
+        assertEquals(listOf<Byte>(1, 2, 3), destino.leerImagen(m1.rutaMapa!!)!!.toList()) // La imagen viaja dentro
+        assertEquals(m1.rutaMapa, m1.lugares[0].rutaImagen)
+
+        // Un archivo que no es una copia no cambia nada
+        assertEquals(null, destino.importar("[]"))
+        assertEquals(2, destino.mundos.value.size)
+    }
 }

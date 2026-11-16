@@ -33,21 +33,24 @@ Está hecho con Kotlin Multiplatform y Compose Multiplatform, y funciona sin int
 - **Mundos:** crea, edita y borra mundos. Cada mundo muestra cuántos personajes, facciones y lugares tiene.
   Con el botón de estrellas los ves como una **constelación**: cada mundo es un círculo con la miniatura de su mapa
   y las líneas unen los mundos enlazados (se eligen al editar un mundo). Los círculos se pueden arrastrar.
-- **Personajes:** nombre, edad, rango (E, D, C, B, A, S), poderes, facción, lugar de origen e historia.
+- **Personajes:** nombre, edad, rango (E, D, C, B, A, S), raza, sexo, poderes, facción, lugar de origen e historia.
+  Un **buscador** encuentra personajes por nombre, raza, poder, facción o lugar.
   La lista va ordenada de S a E, con un círculo de color por rango
   (E gris, D marrón, C verde, B azul, A morado, S dorado).
-  Cada personaje puede tener su **personita chibi**: piel, peinado, color de pelo y ojos, ropa y un accesorio.
+  Cada personaje puede tener su **personita chibi**: piel, peinado, color de pelo y ojos, ropa, orejas y un accesorio.
 - **Facciones:** cada una muestra su número de miembros. Si borras una, sus miembros se quedan sin facción.
 - **Lugares:** se muestran en árbol (continente > reino > ciudad…) con un icono según el tipo.
   Un lugar no puede estar dentro de sí mismo ni de sus sublugares. Si borras uno, sus hijos suben un nivel.
   Todos menos los continentes pueden tener **su propia imagen** (el plano de una ciudad, una mazmorra…), donde colocas
   sus sublugares o puntos libres como "Plaza central".
 - **Mapa:** carga una imagen JPG o PNG o genera un terreno dentro de la app.
-  Tiene zoom y desplazamiento, y puedes colocar tus lugares con pines rojos.
+  Tiene zoom y desplazamiento, y puedes colocar tus lugares con pines del color de su nivel. Se puede exportar a PNG o JPG.
 - **Relaciones:** amigos, rivales, enemigos, pareja, familia, maestro y alumno, aliados u otro, con una nota opcional.
   Se pueden ver en lista o como **constelación**, con una línea del color de cada tipo de relación.
-
-- **Ajustes:** tema claro, oscuro o el del sistema; idioma español o inglés; autor y enlace a las descargas.
+- **Historia:** una **línea temporal** con los sucesos del mundo en orden: cuándo, qué pasó, dónde y quién participó.
+- **Ajustes:** tema claro, oscuro o el del sistema; idioma español o inglés; **copia de seguridad**
+  (exportar e importar todos los mundos con sus imágenes en un archivo, por ejemplo para pasarlos del PC al móvil);
+  autor y enlace a las descargas.
 
 ### ¿Cómo consigo un mapa bonito?
 
@@ -66,10 +69,10 @@ bosque, montaña y nieve) sin necesidad de internet.
 ```
 composeApp/src/
 ├── commonMain/kotlin/com/sekaiforlyok/   ← casi todo el código (común a Android y Windows)
-│   ├── model/        Modelos.kt          Datos: Mundo, Personaje, Faccion, Lugar, Relacion
-│   ├── data/         Repositorio.kt      Guarda y carga los mundos en mundos.json
+│   ├── model/        Modelos.kt          Datos: Mundo, Personaje, Faccion, Lugar, Relacion, Suceso
+│   ├── data/         Repositorio.kt      Guarda y carga los mundos en mundos.json y hace las copias de seguridad
 │   ├── viewmodel/    MundosViewModel.kt  Lógica de la lista de mundos
-│   │                 MundoViewModel.kt   Lógica de las 5 pestañas de un mundo
+│   │                 MundoViewModel.kt   Lógica de las 6 pestañas de un mundo
 │   │                 ReglasMundo.kt      Reglas: borrar en cascada, árbol de lugares…
 │   │                 GeneradorTerreno.kt Generador de mapas aleatorios
 │   ├── ui/           App.kt y pantallas  Solo muestran el estado y llaman al ViewModel

@@ -22,6 +22,7 @@ data class Mundo(
     val posX: Float? = null,          // Posición en la constelación: de 0 a 1 a lo ancho (null = automática)
     val relacionesFacciones: List<RelacionFaccion> = emptyList(), // Alianzas y enemistades entre facciones
     val posY: Float? = null,          // Posición en la constelación: dp desde arriba
+    val sucesos: List<Suceso> = emptyList(), // Línea temporal, en orden (el primero es el más antiguo)
 )
 
 /** Rangos de poder, de menor (E) a mayor (S). El orden importa para ordenar la lista. */
@@ -51,6 +52,7 @@ data class Faccion(
     val descripcion: String = "",
     val posX: Float? = null,          // Posición en la constelación de facciones (igual que en Mundo)
     val posY: Float? = null,
+    val color: Int? = null,           // Número de su color (0 a 7). null = según el orden (datos antiguos)
 )
 
 /** Cómo se llevan dos facciones. El texto que se ve en pantalla está en ui/Textos.kt. */
@@ -137,3 +139,25 @@ enum class Orejas { HUMANAS, PUNTIAGUDAS, GATO, CONEJO }
 
 /** SIN_SEXO = razas que no tienen sexos. El texto está en ui/Textos.kt. */
 enum class Sexo { HOMBRE, MUJER, SIN_SEXO }
+
+/**
+ * Copia de seguridad: todos los mundos y sus imágenes en un solo archivo JSON.
+ * Las rutas de las imágenes se guardan solo con el nombre del archivo (la carpeta cambia entre PC y móvil).
+ */
+@Serializable
+data class CopiaSeguridad(
+    val version: Int = 1,
+    val mundos: List<Mundo>,
+    val imagenes: Map<String, String> = emptyMap(), // Nombre del archivo -> contenido en Base64
+)
+
+/** Un suceso de la historia del mundo (línea temporal). */
+@Serializable
+data class Suceso(
+    val id: String,
+    val titulo: String,
+    val cuando: String = "",                     // Texto libre: "Año 312", "Hace diez años"…
+    val descripcion: String = "",
+    val personajes: List<String> = emptyList(),  // Ids de los personajes que participan
+    val lugarId: String? = null,                 // Dónde pasó; null = sin lugar
+)

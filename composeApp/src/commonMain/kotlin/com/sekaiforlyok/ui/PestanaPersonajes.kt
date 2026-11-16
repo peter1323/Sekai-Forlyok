@@ -23,6 +23,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -36,6 +38,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -53,6 +56,7 @@ import com.sekaiforlyok.model.Personaje
 import com.sekaiforlyok.model.Rango
 import com.sekaiforlyok.model.Sexo
 import com.sekaiforlyok.viewmodel.MundoViewModel
+import com.sekaiforlyok.viewmodel.buscarPersonajes
 import com.sekaiforlyok.viewmodel.nuevoId
 import com.sekaiforlyok.viewmodel.personajesOrdenados
 
@@ -107,12 +111,27 @@ fun AvatarPersonaje(p: Personaje, tamano: Dp) {
 fun PestanaPersonajes(mundo: Mundo, vm: MundoViewModel) {
     val t = LocalTextos.current
     var editando by remember { mutableStateOf<Personaje?>(null) }  // Personaje abierto en el formulario
+    var busqueda by rememberSaveable { mutableStateOf("") }
     var borrando by remember { mutableStateOf<Personaje?>(null) }
 
     ConBotonAnadir(t.anadirPersonaje, alPulsar = { editando = Personaje(id = nuevoId(), nombre = "") }) {
         if (mundo.personajes.isEmpty()) ListaVacia(t.sinPersonajes)
+      Column {
+        // Buscador: solo sale si hay personajes
+        if (mundo.personajes.isNotEmpty()) {
+            OutlinedTextField(
+                busqueda, { busqueda = it },
+                placeholder = { Text(t.buscarPersonaje) },
+                leadingIcon = { Icon(Icons.Default.Search, null) },
+                trailingIcon = { if (busqueda.isNotEmpty()) IconButton(onClick = { busqueda = "" }) { Icon(Icons.Default.Close, t.borrarBusqueda) } },
+                singleLine = true, shape = RoundedCornerShape(24.dp),
+                modifier = Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 12.dp),
+            )
+        }
+        val encontrados = mundo.buscarPersonajes(busqueda)
+        if (mundo.personajes.isNotEmpty() && encontrados.isEmpty()) ListaVacia(t.sinResultados(busqueda.trim()))
         LazyColumn(contentPadding = PaddingValues(12.dp, 12.dp, 12.dp, 88.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            items(mundo.personajesOrdenados(), key = { it.id }) { p ->
+            items(encontrados, key = { it.id }) { p ->
                 TarjetaPersonaje(
                     p = p,
                     faccion = mundo.facciones.find { it.id == p.faccionId },
@@ -122,6 +141,7 @@ fun PestanaPersonajes(mundo: Mundo, vm: MundoViewModel) {
                 )
             }
         }
+      }
     }
 
     editando?.let { p ->

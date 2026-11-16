@@ -9,6 +9,7 @@ import com.sekaiforlyok.model.Peinado
 import com.sekaiforlyok.model.Personaje
 import com.sekaiforlyok.model.Rango
 import com.sekaiforlyok.model.Relacion
+import com.sekaiforlyok.model.Suceso
 import com.sekaiforlyok.model.Ropa
 import com.sekaiforlyok.model.TipoLugar
 import com.sekaiforlyok.model.TipoRelacion
@@ -74,6 +75,11 @@ private fun reinoDeAethel() = Mundo(
         Relacion("r4", "jin", "kael", TipoRelacion.ENEMIGOS),
         Relacion("r5", "rhen", "tobi", TipoRelacion.ALIADOS, "Tobi le guía por las mazmorras."),
         Relacion("r6", "jin", "haeun", TipoRelacion.AMIGOS),
+    ),
+    sucesos = listOf(
+        Suceso("s1", "Se abren las Puertas", "Hace diez años", "Aparecen las primeras mazmorras y despiertan los cazadores.", lugarId = "seul"),
+        Suceso("s2", "El despertar de Jin-woo", "Hace un año", "El cazador más débil sobrevive a la Puerta Roja y despierta su poder.", listOf("jin", "rhen"), "puerta"),
+        Suceso("s3", "Kael ataca la capital", "Este año", "El Culto Carmesí intenta abrir todas las Puertas a la vez.", listOf("kael", "jin", "haeun"), "seul"),
     ),
 )
 

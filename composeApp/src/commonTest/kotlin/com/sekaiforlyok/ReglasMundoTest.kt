@@ -1,6 +1,12 @@
 package com.sekaiforlyok
 
 import androidx.compose.ui.geometry.Offset
+import com.sekaiforlyok.viewmodel.moverSuceso
+import com.sekaiforlyok.viewmodel.buscarPersonajes
+import com.sekaiforlyok.viewmodel.relacionRepetida
+import com.sekaiforlyok.viewmodel.colorLibreFaccion
+import com.sekaiforlyok.viewmodel.indiceColorFaccion
+import com.sekaiforlyok.model.Suceso
 import com.sekaiforlyok.model.Faccion
 import com.sekaiforlyok.model.Lugar
 import com.sekaiforlyok.model.Mundo
@@ -201,5 +207,55 @@ class ReglasMundoTest {
         )
         val r = m.ponerNacidos("l1", setOf("b")).personajes.associate { it.id to it.lugarId }
         assertEquals(mapOf("a" to null, "b" to "l1", "c" to "l2"), r)
+    }
+    @Test
+    fun alBorrarUnaFaccionLasDemasNoCambianDeColorYLaNuevaTomaUnoLibre() {
+        val m = Mundo("m", "M", facciones = listOf(Faccion("a", "A"), Faccion("b", "B"), Faccion("c", "C")))
+        val sinB = m.borrarFaccion("b")
+        assertEquals(listOf(0, 2), sinB.facciones.map { sinB.indiceColorFaccion(it.id) }) // C sigue con el 2
+        assertEquals(1, sinB.colorLibreFaccion())                                        // El de B queda libre
+    }
+
+    @Test
+    fun entreDosPersonajesSoloPuedeHaberUnaRelacion() {
+        val m = Mundo("m", "M", relaciones = listOf(Relacion("r1", "a", "b")))
+        assertEquals(true, m.relacionRepetida(Relacion("r2", "b", "a")))  // Al revés también cuenta
+        assertEquals(false, m.relacionRepetida(Relacion("r1", "a", "b"))) // Editar la misma vale
+        assertEquals(false, m.relacionRepetida(Relacion("r3", "a", "c")))
+    }
+
+    @Test
+    fun elBuscadorMiraNombreRazaPoderesFaccionYLugarSinTildes() {
+        val m = Mundo(
+            "m", "M",
+            facciones = listOf(Faccion("f", "Gremio Cuervo")),
+            lugares = listOf(Lugar("l", "Seúl Nueva")),
+            personajes = listOf(
+                Personaje("a", "Ana", raza = "Elfa", poderes = listOf("Fuego")),
+                Personaje("b", "Bo", faccionId = "f", lugarId = "l"),
+            ),
+        )
+        fun ids(texto: String) = m.buscarPersonajes(texto).map { it.id }.toSet()
+        assertEquals(setOf("a", "b"), ids("  "))
+        assertEquals(setOf("a"), ids("elf"))
+        assertEquals(setOf("a"), ids("FUEGO"))
+        assertEquals(setOf("b"), ids("cuervo"))
+        assertEquals(setOf("b"), ids("seul"))
+        assertEquals(emptySet(), ids("dragón"))
+    }
+
+    @Test
+    fun losSucesosSeReordenanYSeLimpianAlBorrarPersonajesYLugares() {
+        val m = Mundo(
+            "m", "M",
+            personajes = listOf(Personaje("p", "P")),
+            lugares = listOf(Lugar("l", "L")),
+            sucesos = listOf(Suceso("s1", "Uno", personajes = listOf("p"), lugarId = "l"), Suceso("s2", "Dos")),
+        )
+        assertEquals(listOf("s2", "s1"), m.moverSuceso("s2", arriba = true).sucesos.map { it.id })
+        assertEquals(m, m.moverSuceso("s1", arriba = true)) // El primero no puede subir más
+        val limpio = m.borrarPersonaje("p").borrarLugar("l").sucesos[0]
+        assertEquals(emptyList(), limpio.personajes)
+        assertEquals(null, limpio.lugarId)
     }
 }

@@ -3,6 +3,7 @@ package com.sekaiforlyok.viewmodel
 import com.sekaiforlyok.model.Lugar
 import com.sekaiforlyok.model.Mundo
 import com.sekaiforlyok.model.Personaje
+import com.sekaiforlyok.model.Relacion
 import com.sekaiforlyok.model.RelacionFaccion
 import com.sekaiforlyok.model.TipoRelacionFaccion
 import kotlin.random.Random
@@ -72,15 +73,32 @@ fun Mundo.arbolLugares(): List<Pair<Lugar, Int>> {
     return resultado
 }
 
-/** Borra un personaje y todas sus relaciones. */
+/** Borra un personaje y todas sus relaciones. También deja de salir en los sucesos de la historia. */
 fun Mundo.borrarPersonaje(id: String): Mundo = copy(
     personajes = personajes.filter { it.id != id },
+    sucesos = sucesos.map { if (id in it.personajes) it.copy(personajes = it.personajes - id) else it },
     relaciones = relaciones.filter { it.personaje1Id != id && it.personaje2Id != id },
 )
 
-/** Borra una facción; sus miembros se quedan sin facción y se borran sus alianzas y enemistades. */
+/** Cuántos colores distintos hay para las facciones (ver COLORES_FACCION en la interfaz). */
+const val NUM_COLORES_FACCION = 8
+
+/** Número de color de una facción: el guardado o, en datos antiguos, el de su orden de creación. */
+fun Mundo.indiceColorFaccion(id: String): Int =
+    facciones.find { it.id == id }?.color ?: (facciones.indexOfFirst { it.id == id }.coerceAtLeast(0) % NUM_COLORES_FACCION)
+
+/** Primer color que no usa ninguna facción (si están todos, se repiten). */
+fun Mundo.colorLibreFaccion(): Int {
+    val usados = facciones.map { indiceColorFaccion(it.id) }.toSet()
+    return (0 until NUM_COLORES_FACCION).firstOrNull { it !in usados } ?: (facciones.size % NUM_COLORES_FACCION)
+}
+
+/**
+ * Borra una facción; sus miembros se quedan sin facción y se borran sus alianzas y enemistades.
+ * Las demás guardan su color, para que no cambie al cambiar el orden.
+ */
 fun Mundo.borrarFaccion(id: String): Mundo = copy(
-    facciones = facciones.filter { it.id != id },
+    facciones = facciones.filter { it.id != id }.map { it.copy(color = indiceColorFaccion(it.id)) },
     relacionesFacciones = relacionesFacciones.filter { it.faccion1Id != id && it.faccion2Id != id },
     personajes = personajes.map { if (it.faccionId == id) it.copy(faccionId = null) else it },
 )
@@ -96,6 +114,7 @@ fun Mundo.borrarLugar(id: String): Mundo {
             // Su posición dentro de la imagen del lugar borrado ya no sirve
             .map { if (it.padreId == id) it.copy(padreId = borrado.padreId, xEnPadre = null, yEnPadre = null) else it },
         personajes = personajes.map { if (it.lugarId == id) it.copy(lugarId = null) else it },
+        sucesos = sucesos.map { if (it.lugarId == id) it.copy(lugarId = null) else it },
     )
 }
 
@@ -157,4 +176,39 @@ fun Mundo.relacionarFacciones(a: String, b: String, tipo: TipoRelacionFaccion): 
     if (a == b) return this
     val otras = relacionesFacciones.filterNot { setOf(it.faccion1Id, it.faccion2Id) == setOf(a, b) }
     return copy(relacionesFacciones = otras + RelacionFaccion(nuevoId(), a, b, tipo))
+}
+
+/** true si esos dos personajes ya tienen otra relación (solo puede haber una entre los mismos dos). */
+fun Mundo.relacionRepetida(r: Relacion): Boolean = relaciones.any {
+    it.id != r.id && setOf(it.personaje1Id, it.personaje2Id) == setOf(r.personaje1Id, r.personaje2Id)
+}
+
+/** Texto en minúsculas y sin tildes, para que "seul" encuentre "Seúl". */
+private fun String.paraBuscar(): String = lowercase()
+    .map { c -> when (c) { 'á', 'à' -> 'a'; 'é', 'è' -> 'e'; 'í', 'ì' -> 'i'; 'ó', 'ò' -> 'o'; 'ú', 'ù', 'ü' -> 'u'; else -> c } }
+    .joinToString("")
+
+/**
+ * Personajes (de S a E) que encajan con [texto]: en su nombre, raza, poderes, facción o lugar de origen.
+ * Con el texto vacío devuelve todos.
+ */
+fun Mundo.buscarPersonajes(texto: String): List<Personaje> {
+    val buscado = texto.trim().paraBuscar()
+    if (buscado.isEmpty()) return personajesOrdenados()
+    return personajesOrdenados().filter { p ->
+        val campos = listOfNotNull(
+            p.nombre, p.raza,
+            facciones.find { it.id == p.faccionId }?.nombre,
+            lugares.find { it.id == p.lugarId }?.nombre,
+        ) + p.poderes
+        campos.any { buscado in it.paraBuscar() }
+    }
+}
+
+/** Sube ([arriba] = true, más antiguo) o baja un suceso un puesto en la línea temporal. */
+fun Mundo.moverSuceso(id: String, arriba: Boolean): Mundo {
+    val i = sucesos.indexOfFirst { it.id == id }
+    val j = if (arriba) i - 1 else i + 1
+    if (i < 0 || j !in sucesos.indices) return this // Ya está en un extremo
+    return copy(sucesos = sucesos.toMutableList().apply { add(j, removeAt(i)) })
 }

@@ -59,8 +59,8 @@ fun PantallaMundos(
             TopAppBar(
                 title = { Text(t.mundos) },
                 actions = {
-                    // Crea mundos de ejemplo para probar la app rápidamente
-                    TextButton(onClick = vm::cargarDatosDePrueba) { Text(t.datosDePrueba) }
+                    // Mundos de ejemplo para probar la app: solo si aún no hay ninguno (así no se duplican)
+                    if (mundos.isEmpty()) TextButton(onClick = vm::cargarDatosDePrueba) { Text(t.datosDePrueba) }
                     // Ver todos los mundos como constelación, con sus enlaces
                     IconButton(onClick = alAbrirConstelacion) { Icon(Icons.Default.AutoAwesome, t.constelacion) }
                     IconButton(onClick = alAbrirAjustes) { Icon(Icons.Default.Settings, t.ajustes) }

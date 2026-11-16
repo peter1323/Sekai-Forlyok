@@ -29,7 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.sekaiforlyok.viewmodel.MundoViewModel
 
-/** Pantalla 2: un mundo con sus 5 pestañas. */
+/** Pantalla 2: un mundo con sus 6 pestañas. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantallaMundo(vm: MundoViewModel, alVolver: () -> Unit) {
@@ -67,6 +67,7 @@ fun PantallaMundo(vm: MundoViewModel, alVolver: () -> Unit) {
                 2 -> PestanaLugares(actual, vm)
                 3 -> PestanaMapa(actual, vm)
                 4 -> PestanaRelaciones(actual, vm)
+                5 -> PestanaHistoria(actual, vm)
             }
         }
     }

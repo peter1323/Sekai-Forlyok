@@ -1,5 +1,7 @@
 package com.sekaiforlyok.ui
 
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -36,6 +38,7 @@ private val repositorio by lazy { Repositorio(carpetaDatos()) }
  * Punto de entrada de la interfaz, común a Android y escritorio.
  * [alCambiarColores] avisa del color de fondo y de texto del tema (escritorio lo usa para pintar la barra de la ventana).
  */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun App(alCambiarColores: (fondo: Color, texto: Color) -> Unit = { _, _ -> }) {
     val ajustesVm = viewModel { AjustesViewModel(repositorio) }
@@ -64,6 +67,14 @@ fun App(alCambiarColores: (fondo: Color, texto: Color) -> Unit = { _, _ -> }) {
                 else -> Pantalla.ListaMundos
             }
             val mundosVm = viewModel { MundosViewModel(repositorio) }
+            // Botón "atrás" del móvil (y Esc en el PC): vuelve a la pantalla anterior en vez de cerrar la app
+            BackHandler(enabled = pantalla != Pantalla.ListaMundos) {
+                when {
+                    enAjustes -> enAjustes = false
+                    mundoAbierto != null -> mundoAbierto = null
+                    else -> enConstelacion = false
+                }
+            }
 
             when (pantalla) {
                 Pantalla.ListaMundos -> PantallaMundos(

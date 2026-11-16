@@ -11,6 +11,7 @@ import com.sekaiforlyok.model.Mundo
 import com.sekaiforlyok.model.Personaje
 import com.sekaiforlyok.model.Punto
 import com.sekaiforlyok.model.Relacion
+import com.sekaiforlyok.model.Suceso
 import com.sekaiforlyok.model.TipoRelacionFaccion
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.extension
@@ -56,7 +57,9 @@ class MundoViewModel(private val repo: Repositorio, private val mundoId: String)
 
     /** Guarda una facción y deja como miembros exactamente a los personajes de [miembros]. */
     fun guardarFaccion(f: Faccion, miembros: Set<String>) = cambiar { m ->
-        m.copy(facciones = m.facciones.reemplazarOAnadir(f.copy(nombre = f.nombre.trim())) { it.id })
+        // Una facción nueva se lleva el primer color que esté libre
+        val color = f.color ?: if (m.facciones.none { it.id == f.id }) m.colorLibreFaccion() else null
+        m.copy(facciones = m.facciones.reemplazarOAnadir(f.copy(nombre = f.nombre.trim(), color = color)) { it.id })
             .ponerMiembros(f.id, miembros)
     }
 
@@ -151,14 +154,25 @@ class MundoViewModel(private val repo: Repositorio, private val mundoId: String)
 
     // ---------- RELACIONES ----------
 
-    /** Guarda una relación. Devuelve false si no es válida (un personaje consigo mismo). */
+    /** Guarda una relación. Devuelve false si no es válida (un personaje consigo mismo, o esos dos ya tienen una). */
     fun guardarRelacion(r: Relacion): Boolean {
-        if (r.personaje1Id == r.personaje2Id) return false
+        if (r.personaje1Id == r.personaje2Id || mundo.value?.relacionRepetida(r) == true) return false
         cambiar { m -> m.copy(relaciones = m.relaciones.reemplazarOAnadir(r.copy(nota = r.nota.trim())) { it.id }) }
         return true
     }
 
     fun borrarRelacion(id: String) = cambiar { m -> m.copy(relaciones = m.relaciones.filter { it.id != id }) }
+
+    // ---------- LÍNEA TEMPORAL ----------
+
+    /** Añade un suceso al final de la historia o guarda los cambios de uno existente. */
+    fun guardarSuceso(s: Suceso) = cambiar { m ->
+        m.copy(sucesos = m.sucesos.reemplazarOAnadir(s.copy(titulo = s.titulo.trim(), cuando = s.cuando.trim(), descripcion = s.descripcion.trim())) { it.id })
+    }
+
+    fun borrarSuceso(id: String) = cambiar { m -> m.copy(sucesos = m.sucesos.filter { it.id != id }) }
+
+    fun moverSuceso(id: String, arriba: Boolean) = cambiar { it.moverSuceso(id, arriba) }
 
     // ---------- MAPA ----------
 

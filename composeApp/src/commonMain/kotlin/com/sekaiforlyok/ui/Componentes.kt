@@ -39,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 
 // Piezas pequeñas que se repiten en varias pantallas.
 
@@ -89,6 +90,8 @@ fun DialogoFormulario(
         text = { Column(Modifier.verticalScroll(rememberScrollState())) { contenido() } },
         confirmButton = { TextButton(onClick = alGuardar, enabled = puedeGuardar) { Text(LocalTextos.current.guardar) } },
         dismissButton = { TextButton(onClick = alCancelar) { Text(LocalTextos.current.cancelar) } },
+        // Pulsar fuera no lo cierra: así no se pierden los cambios sin querer
+        properties = DialogProperties(dismissOnClickOutside = false),
     )
 }
 

@@ -47,6 +47,7 @@ import com.sekaiforlyok.model.Relacion
 import com.sekaiforlyok.model.TipoRelacion
 import com.sekaiforlyok.viewmodel.MundoViewModel
 import com.sekaiforlyok.viewmodel.nuevoId
+import com.sekaiforlyok.viewmodel.relacionRepetida
 import com.sekaiforlyok.viewmodel.personajesOrdenados
 
 /** Color de cada tipo de relación. */
@@ -80,7 +81,11 @@ fun PestanaRelaciones(mundo: Mundo, vm: MundoViewModel) {
         if (mundo.personajes.size < 2) {
             avisoFaltanPersonajes = true
         } else {
-            editando = Relacion(nuevoId(), mundo.personajes[0].id, mundo.personajes[1].id)
+            // Empieza con la primera pareja que aún no tenga relación (si todas la tienen, con las dos primeras)
+            val ids = mundo.personajes.map { it.id }
+            val (a, b) = ids.flatMap { a -> ids.map { b -> a to b } }
+                .firstOrNull { (a, b) -> a != b && !mundo.relacionRepetida(Relacion("", a, b)) } ?: (ids[0] to ids[1])
+            editando = Relacion(nuevoId(), a, b)
         }
     }) {
       Column {
@@ -125,9 +130,10 @@ fun PestanaRelaciones(mundo: Mundo, vm: MundoViewModel) {
     editando?.let { original ->
         var r by remember(original.id) { mutableStateOf(original) }
         val mismoPersonaje = r.personaje1Id == r.personaje2Id
+        val repetida = mundo.relacionRepetida(r)
         DialogoFormulario(
             titulo = if (mundo.relaciones.none { it.id == original.id }) t.nuevaRelacion else t.editarRelacion,
-            puedeGuardar = !mismoPersonaje,
+            puedeGuardar = !mismoPersonaje && !repetida,
             alGuardar = { if (vm.guardarRelacion(r)) editando = null },
             alCancelar = { editando = null },
         ) {
@@ -141,6 +147,7 @@ fun PestanaRelaciones(mundo: Mundo, vm: MundoViewModel) {
             if (mismoPersonaje) {
                 Text(t.mismoPersonaje, color = MaterialTheme.colorScheme.error)
             }
+            if (repetida) Text(t.relacionRepetida, color = MaterialTheme.colorScheme.error)
             Desplegable(t.tipoRelacion, TipoRelacion.entries, r.tipo, { t.tiposRelacion.getValue(it) }) { r = r.copy(tipo = it) }
             OutlinedTextField(r.nota, { r = r.copy(nota = it) }, label = { Text(t.notaOpcional) }, minLines = 2, modifier = Modifier.fillMaxWidth())
         }

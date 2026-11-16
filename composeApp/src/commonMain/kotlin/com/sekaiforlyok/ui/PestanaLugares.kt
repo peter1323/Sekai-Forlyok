@@ -1,5 +1,7 @@
 package com.sekaiforlyok.ui
 
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -76,6 +78,7 @@ private val COLORES_NIVEL = listOf(
 fun colorNivel(nivel: Int): Color = COLORES_NIVEL[nivel.coerceAtMost(COLORES_NIVEL.lastIndex)]
 
 /** Pestaña de lugares: árbol con sangría (continente > reino > ciudad…). */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun PestanaLugares(mundo: Mundo, vm: MundoViewModel) {
     val t = LocalTextos.current
@@ -86,6 +89,7 @@ fun PestanaLugares(mundo: Mundo, vm: MundoViewModel) {
     // Al abrir la imagen de un lugar, ocupa toda la pestaña hasta pulsar "volver"
     val abierto = mundo.lugares.find { it.id == conImagen }
     if (abierto != null) {
+        BackHandler { conImagen = null } // "Atrás" cierra la imagen y vuelve a la lista
         ImagenLugar(abierto, mundo, vm, alVolver = { conImagen = null })
         return
     }

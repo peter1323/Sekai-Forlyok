@@ -1,6 +1,7 @@
 package com.sekaiforlyok.data
 
 import com.sekaiforlyok.model.Ajustes
+import com.sekaiforlyok.model.CopiaSeguridad
 import com.sekaiforlyok.model.Mundo
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,6 +13,7 @@ import kotlinx.io.readByteArray
 import kotlinx.io.readString
 import kotlinx.io.writeString
 import kotlinx.serialization.json.Json
+import kotlin.io.encoding.Base64
 
 /**
  * Guarda y carga todos los mundos en un archivo JSON (mundos.json) dentro de [carpeta].
@@ -94,4 +96,42 @@ class Repositorio(private val carpeta: String) {
     fun borrarImagen(ruta: String) {
         SystemFileSystem.delete(Path(ruta), mustExist = false)
     }
+
+    // ---------- COPIA DE SEGURIDAD ----------
+
+    /** Todos los mundos con sus imágenes dentro, como texto JSON para guardarlo en un archivo. */
+    fun exportar(): String {
+        val mundos = _mundos.value
+        val imagenes = mundos.flatMap { it.rutasImagenes() }
+            .mapNotNull { ruta -> leerImagen(ruta)?.let { Path(ruta).name to Base64.encode(it) } }
+            .toMap()
+        return json.encodeToString(CopiaSeguridad(mundos = mundos.map { m -> m.cambiarRutas { Path(it).name } }, imagenes = imagenes))
+    }
+
+    /**
+     * Añade los mundos de una copia. Los que ya existen (el mismo mundo) se sustituyen por los de la copia.
+     * Devuelve cuántos mundos trae, o null si el texto no es una copia válida (entonces no se toca nada).
+     */
+    fun importar(texto: String): Int? {
+        val copia = runCatching { json.decodeFromString<CopiaSeguridad>(texto) }.getOrNull() ?: return null
+        // Solo el nombre del archivo: un nombre como "../../algo" no puede escribir fuera de la carpeta
+        val imagenes = runCatching { copia.imagenes.map { (nombre, datos) -> Path(nombre).name to Base64.decode(datos) }.filter { it.first !in setOf("", ".", "..") } }.getOrNull() ?: return null
+        val nuevos = copia.mundos.map { m -> m.cambiarRutas { Path(carpeta, Path(it).name).toString() } }
+        // Las imágenes de los mundos sustituidos que la copia ya no usa se borran
+        val ids = nuevos.map { it.id }.toSet()
+        val rutasNuevas = nuevos.flatMap { it.rutasImagenes() }.toSet()
+        _mundos.value.filter { it.id in ids }.flatMap { it.rutasImagenes() }.filter { it !in rutasNuevas }.forEach(::borrarImagen)
+        imagenes.forEach { (nombre, bytes) -> guardarImagen(nombre, bytes) }
+        guardar(_mundos.value.filter { it.id !in ids } + nuevos)
+        return nuevos.size
+    }
 }
+
+/** Rutas de todas las imágenes de un mundo: su mapa y las de sus lugares. */
+private fun Mundo.rutasImagenes(): List<String> = listOfNotNull(rutaMapa) + lugares.mapNotNull { it.rutaImagen }
+
+/** Copia del mundo con las rutas de sus imágenes cambiadas por [cambio]. */
+private fun Mundo.cambiarRutas(cambio: (String) -> String): Mundo = copy(
+    rutaMapa = rutaMapa?.let(cambio),
+    lugares = lugares.map { l -> l.copy(rutaImagen = l.rutaImagen?.let(cambio)) },
+)
